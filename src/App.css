@@ -1,0 +1,173 @@
+#root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.card {
+    padding: 2em;
+}
+
+.read-the-docs {
+    color: #888;
+}
+
+/* -------------------- */
+
+:root {
+    --color-cell-outline: rgb(153, 129, 129);
+    --color-cell-bg-dark: rgb(109, 85, 85);
+    --color-cell-bg-bright: rgb(167, 147, 147);
+
+    --color-black-body: rgb(27, 20, 20);
+    --color-black-core: rgb(39, 29, 29);
+    --color-black-outline: rgb(56, 49, 49);
+
+    --color-white-body: rgb(77, 71, 64);
+    --color-white-core: rgb(97, 85, 76);
+    --color-white-outline: rgb(37, 35, 30);
+
+    --color-checker-shadow-active: yellow;
+    --color-checker-shadow-attack: red;
+    --color-checker-shadow-available: green;
+
+    --size-cell: 70px;
+    --size-cell-outline: 2px;
+
+    --size-checker: 55px;
+    --size-checker-core: 35px;
+    --size-checker-outline: var(--size-cell-outline);
+    --size-checker-active-shadow: 15px;
+
+    --size-possible-move: calc(var(--size-cell) * 0.75);
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+
+    border: 10px solid rgb(105, 87, 62);
+    outline: 4px solid rgb(82, 54, 54);
+}
+
+.board-inverse,
+.cell-inverse {
+    /* transform: rotate(180deg); */
+}
+
+.row {
+    display: flex;
+}
+
+.cell {
+    font-size: calc(var(--size-cell) * 0.18);
+    text-align: left;
+    color: rgb(46, 233, 62);
+    line-height: 0.7;
+    user-select: none;
+    background-color: var(--color-cell-bg-dark);
+    border: calc(var(--size-cell-outline) / 2) solid var(--color-cell-outline);
+    outline: calc(var(--size-cell-outline) / 2) solid var(--color-cell-outline);
+    width: var(--size-cell);
+    height: var(--size-cell);
+    position: relative;
+}
+
+.dark {
+    background-color: var(--color-cell-bg-dark);
+}
+
+.light {
+    background-color: var(--color-cell-bg-bright);
+}
+
+.black::before {
+    position: absolute;
+    content: "";
+    width: var(--size-checker);
+    height: var(--size-checker);
+    top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
+    left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
+    border-radius: 50%;
+    background-color: var(--color-black-body);
+    outline: var(--size-checker-outline) solid var(--color-black-outline);
+}
+
+.black::after {
+    position: absolute;
+    content: "";
+    width: var(--size-checker-core);
+    height: var(--size-checker-core);
+    top: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
+    left: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
+    border-radius: 50%;
+    background-color: var(--color-black-core);
+    outline: var(--size-checker-outline) solid var(--color-black-outline);
+}
+
+.white::before {
+    position: absolute;
+    content: "";
+    width: var(--size-checker);
+    height: var(--size-checker);
+    top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
+    left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
+    border-radius: 50%;
+    background-color: var(--color-white-body);
+    outline: var(--size-checker-outline) solid var(--color-white-outline);
+}
+
+.white::after {
+    position: absolute;
+    content: "";
+    width: var(--size-checker-core);
+    height: var(--size-checker-core);
+    top: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
+    left: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
+    border-radius: 50%;
+    background-color: var(--color-white-core);
+    outline: var(--size-checker-outline) solid var(--color-white-outline);
+}
+
+/* .black,
+.white {
+} */
+
+.available:hover::before {
+    /* cursor: pointer; */
+    box-shadow: 0 0 var(--size-checker-active-shadow)
+        var(--color-checker-shadow-available);
+}
+
+.available {
+    /* cursor: pointer; */
+}
+
+.active::before,
+.active:hover::before {
+    box-shadow: 0 0 var(--size-checker-active-shadow)
+        var(--color-checker-shadow-active);
+}
+
+.attack::before {
+    box-shadow: 0 0 var(--size-checker-active-shadow)
+        var(--color-checker-shadow-attack);
+}
+
+.possible-move::before {
+    position: absolute;
+    content: "";
+    width: var(--size-checker);
+    height: var(--size-checker);
+    top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
+    left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
+    border-radius: 50%;
+    background-color: transparent;
+    box-shadow: 0 0 var(--size-checker-active-shadow)
+        var(--color-checker-shadow-available);
+}
+
+.possible-move:hover {
+    cursor: pointer;
+}
