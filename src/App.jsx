@@ -1,6 +1,10 @@
 import { useState } from "react";
 import "./App.css";
 
+let isNextWhite = true;
+let activeCheckerID = null;
+const possibleAttacks = [];
+
 export default function App() {
     return (
         <div>
@@ -8,10 +12,6 @@ export default function App() {
         </div>
     );
 }
-
-let isNextWhite = true;
-let activeCheckerID = null;
-const possibleAttacks = [];
 
 function Board() {
     const [cellsData, setCellsData] = useState(createInitialData());
@@ -40,12 +40,12 @@ function Board() {
                 }
 
                 const currentCellData = {
+                    bg: bgColor,
                     row: row + 1,
                     column: cell + 1,
                     id: `${row + 1}-${cell + 1}`,
                     checker,
                     isKing: false,
-                    bg: bgColor,
                     isFieldToMove: false,
                     isActive: false,
                     isUnderAttack: false,
@@ -69,19 +69,29 @@ function Board() {
 
             activeCheckerID = clickedCellData.id;
 
-            const cellsToMove = getClosestCellsData(clickedCellData).filter(
-                (cellData) => isEmptyField(cellData)
-            );
+            const cellsToMove = getClosestCellsData(
+                clickedCellData,
+                clickedCellData.isKing
+            ).filter((cellData) => isEmptyField(cellData));
 
             const attackableCells = [];
 
+            // recurstion limit base
+            const argumentsOfSetAttacksCalls = [];
+
+            // function works recursively and call itself
+            // for every next empty cell behind enemy checker
             setAttacks(clickedCellData);
 
             function setAttacks(subjectCellData) {
-                console.log("work with " + subjectCellData.id);
+                // prevent backward movement in chain of cheking cells to avoid forever loop
+                if (argumentsOfSetAttacksCalls.includes(subjectCellData.id))
+                    return;
+                argumentsOfSetAttacksCalls.push(subjectCellData.id);
 
                 const cellsWithEnemiesNearby = getClosestCellsData(
-                    subjectCellData
+                    subjectCellData,
+                    clickedCellData.isKing
                 ).filter((cellData) => isEnemyChecker(cellData));
 
                 if (cellsWithEnemiesNearby.length > 0) {
@@ -122,15 +132,15 @@ function Board() {
                 }
             }
 
-            console.log(possibleAttacks);
-
-            markActiveChecker(clickedCellData);
+            setActiveChecker(clickedCellData);
             markAttacableCells(attackableCells);
             markMovableCells(cellsToMove);
 
             // move
         } else if (clickedCellData.isFieldToMove) {
-            moveChecker(getData(activeCheckerID), clickedCellData);
+            const activeCheckerData = getData(activeCheckerID);
+
+            moveChecker(activeCheckerData, clickedCellData);
 
             const checkersUnderAttackIDs = possibleAttacks.find(
                 (attackObj) => attackObj.moveID === clickedCellData.id
@@ -146,6 +156,13 @@ function Board() {
 
             clearStartMoveState();
 
+            const isLastRow =
+                (isNextWhite && clickedCellData.row === 1) ||
+                (!isNextWhite && clickedCellData.row === 8);
+
+            if (isLastRow && !activeCheckerData.isKing)
+                createKing(clickedCellData);
+
             isNextWhite = !isNextWhite;
 
             // just clear start move
@@ -157,7 +174,7 @@ function Board() {
             return cellsData.find((cellData) => cellData.id === id);
         }
 
-        function getClosestCellsData(cellData) {
+        function getClosestCellsData(cellData, isKingMode = false) {
             const id = cellData.id;
 
             let possibleMoveCells = [];
@@ -175,25 +192,26 @@ function Board() {
                     getData(`${+id[0] + rowShift}-${+id[2] + 1}`)
                 );
 
+            if (isKingMode) {
+                // check cell on back-left
+                if (id[2] !== "1")
+                    possibleMoveCells.push(
+                        getData(`${+id[0] - rowShift}-${+id[2] - 1}`)
+                    );
+                // check cell on back-right
+                if (id[2] !== "8")
+                    possibleMoveCells.push(
+                        getData(`${+id[0] - rowShift}-${+id[2] + 1}`)
+                    );
+            }
+
             return possibleMoveCells;
         }
 
-        function isPlayerChecker(cellData) {
-            return (
-                (isNextWhite && cellData?.checker === "white") ||
-                (!isNextWhite && cellData?.checker === "black")
-            );
-        }
-
-        function isEnemyChecker(cellData) {
-            return (
-                (isNextWhite && cellData?.checker === "black") ||
-                (!isNextWhite && cellData?.checker === "white")
-            );
-        }
-
         function getCellBehindData(subjectData, targetData) {
-            const rowShift = isNextWhite ? -1 : 1;
+            // const rowShift = isNextWhite ? -1 : 1;
+
+            const rowShift = subjectData.row > targetData.row ? -1 : 1;
 
             const rowToCheck = subjectData.row + rowShift;
 
@@ -220,7 +238,7 @@ function Board() {
             return !cellData?.checker;
         }
 
-        function markActiveChecker(targetData) {
+        function setActiveChecker(targetData) {
             setCellsData((prevState) => {
                 return prevState.map((cellData) => {
                     return cellData.id === targetData.id
@@ -230,11 +248,21 @@ function Board() {
             });
         }
 
+        function createKing(targetCellData) {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
+                    return cellData.id === targetCellData.id
+                        ? { ...cellData, isKing: true }
+                        : cellData;
+                });
+            });
+        }
+
         function markMovableCells(cellsToMoveData) {
             setCellsData((prevState) => {
                 return prevState.map((cellData) => {
-                    return cellsToMoveData.find((cellToMoveData) => {
-                        return cellToMoveData.id === cellData.id;
+                    return cellsToMoveData?.find((cellToMoveData) => {
+                        return cellToMoveData?.id === cellData.id;
                     })
                         ? { ...cellData, isFieldToMove: true }
                         : { ...cellData, isFieldToMove: false };
@@ -276,13 +304,14 @@ function Board() {
                             ? {
                                   ...cellData,
                                   checker: isNextWhite ? "white" : "black",
+                                  isKing: checkerCellData.isKing ? true : false,
                               }
                             : cellData;
                     })
                     .map((cellData) => {
                         // remove checker from previous place
                         return cellData.id === checkerCellData.id
-                            ? { ...cellData, checker: null }
+                            ? { ...cellData, checker: null, isKing: false }
                             : cellData;
                     })
             );
@@ -323,20 +352,41 @@ function Board() {
 }
 
 function Cell({ cellData, onUpdateCellData }) {
+    const isMovalbe =
+        cellData.checker && isPlayerChecker(cellData) && !cellData.isActive;
+
     return (
         <div
             className={`cell
                 ${cellData.bg}
-                ${cellData.checker ? cellData.checker : ""}
+                ${cellData.checker ? `checker ${cellData.checker}` : ""}
+                ${isMovalbe && "movable"}
+                ${cellData.checker && isPlayerChecker(cellData) && "pointer"}
                 ${cellData.isFieldToMove ? "possible-move" : ""}
                 ${cellData.isActive ? "active" : ""}
+                ${cellData.isKing ? "king" : ""}
                 ${cellData.isUnderAttack ? "attack" : ""}
-                ${cellData.isCanPlay ? "available" : ""}
                 ${isNextWhite ? "" : "cell-inverse"}
             `}
             onClick={() => onUpdateCellData(cellData)}
         >
             {cellData.id}
         </div>
+    );
+}
+
+//---------------- Common functions ------------------
+
+function isPlayerChecker(cellData) {
+    return (
+        (isNextWhite && cellData?.checker === "white") ||
+        (!isNextWhite && cellData?.checker === "black")
+    );
+}
+
+function isEnemyChecker(cellData) {
+    return (
+        (isNextWhite && cellData?.checker === "black") ||
+        (!isNextWhite && cellData?.checker === "white")
     );
 }

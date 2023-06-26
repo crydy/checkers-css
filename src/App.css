@@ -5,16 +5,6 @@
     text-align: center;
 }
 
-.card {
-    padding: 2em;
-}
-
-.read-the-docs {
-    color: #888;
-}
-
-/* -------------------- */
-
 :root {
     --color-cell-outline: rgb(153, 129, 129);
     --color-cell-bg-dark: rgb(109, 85, 85);
@@ -82,66 +72,45 @@
     background-color: var(--color-cell-bg-bright);
 }
 
-.black::before {
+.checker::before,
+.checker::after {
     position: absolute;
     content: "";
+    border-radius: 50%;
+}
+
+.checker::before {
     width: var(--size-checker);
     height: var(--size-checker);
     top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
     left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
-    border-radius: 50%;
+}
+
+.checker::after {
+    width: var(--size-checker-core);
+    height: var(--size-checker-core);
+    top: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
+    left: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
+}
+
+.black::before {
     background-color: var(--color-black-body);
     outline: var(--size-checker-outline) solid var(--color-black-outline);
 }
 
 .black::after {
-    position: absolute;
-    content: "";
-    width: var(--size-checker-core);
-    height: var(--size-checker-core);
-    top: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
-    left: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
-    border-radius: 50%;
     background-color: var(--color-black-core);
     outline: var(--size-checker-outline) solid var(--color-black-outline);
 }
 
 .white::before {
-    position: absolute;
-    content: "";
-    width: var(--size-checker);
-    height: var(--size-checker);
-    top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
-    left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
-    border-radius: 50%;
     background-color: var(--color-white-body);
     outline: var(--size-checker-outline) solid var(--color-white-outline);
 }
 
 .white::after {
-    position: absolute;
-    content: "";
-    width: var(--size-checker-core);
-    height: var(--size-checker-core);
-    top: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
-    left: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
-    border-radius: 50%;
     background-color: var(--color-white-core);
     outline: var(--size-checker-outline) solid var(--color-white-outline);
-}
-
-/* .black,
-.white {
-} */
-
-.available:hover::before {
-    /* cursor: pointer; */
-    box-shadow: 0 0 var(--size-checker-active-shadow)
-        var(--color-checker-shadow-available);
-}
-
-.available {
-    /* cursor: pointer; */
 }
 
 .active::before,
@@ -158,16 +127,36 @@
 .possible-move::before {
     position: absolute;
     content: "";
+    border-radius: 50%;
+
     width: var(--size-checker);
     height: var(--size-checker);
     top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
     left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
-    border-radius: 50%;
+
     background-color: transparent;
     box-shadow: 0 0 var(--size-checker-active-shadow)
         var(--color-checker-shadow-available);
 }
 
-.possible-move:hover {
+.possible-move {
     cursor: pointer;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.movable:hover::before {
+    box-shadow: 0 0 var(--size-checker-active-shadow)
+        var(--color-checker-shadow-available);
+}
+
+.movable:active::before {
+    box-shadow: 0 0 var(--size-checker-active-shadow)
+        var(--color-checker-shadow-active);
+}
+
+.king::after {
+    background-color: rgb(117, 70, 70);
 }
