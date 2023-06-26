@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./App.css";
 
 export default function App() {
@@ -9,14 +9,11 @@ export default function App() {
     );
 }
 
-let isMoveMode = false;
 let isNextWhite = true;
-let possibleMovesObjects = null;
+let activeCheckerID = null;
+const possibleAttacks = [];
 
 function Board() {
-    // const [nextWhite, setNextWhite] = useState(true);
-    // const [possibleMoveIDs, setPossibleMoveIDs] = useState(null);
-    // const [active, setActive] = useState(null);
     const [cellsData, setCellsData] = useState(createInitialData());
 
     function createInitialData() {
@@ -43,7 +40,6 @@ function Board() {
                 }
 
                 const currentCellData = {
-                    index: index,
                     row: row + 1,
                     column: cell + 1,
                     id: `${row + 1}-${cell + 1}`,
@@ -64,93 +60,219 @@ function Board() {
     }
 
     function handleSellData(clickedCellData) {
-        // start move, cancel move
-        if (
-            (isNextWhite && clickedCellData.checker === "white") ||
-            (!isNextWhite && clickedCellData.checker === "black")
-        ) {
-            if (!clickedCellData.isActive) {
-                isMoveMode = true;
-                possibleMovesObjects = getNextMoveIDs(clickedCellData.id);
-                console.log(possibleMovesObjects);
-
-                setCellsData(
-                    cellsData
-                        // set active
-                        .map((cellData) => {
-                            return cellData.id === clickedCellData.id
-                                ? { ...cellData, isActive: true }
-                                : { ...cellData, isActive: false };
-                        })
-                        // mark possible moves
-                        .map((cellData) => {
-                            return possibleMovesObjects?.find((moveObj) => {
-                                return moveObj.cellToMoveID === cellData.id;
-                            })
-                                ? { ...cellData, isFieldToMove: true }
-                                : { ...cellData, isFieldToMove: false };
-                        })
-                        // mark enemy under attack
-                        .map((cellData) => {
-                            return possibleMovesObjects?.find((moveObj) => {
-                                return moveObj.enemyID === cellData.id;
-                            })
-                                ? { ...cellData, isUnderAttack: true }
-                                : { ...cellData, isUnderAttack: false };
-                        })
-                );
-            } else {
-                setCellsData(
-                    cellsData.map((cellData) => {
-                        // clear special marks for all
-                        return {
-                            ...cellData,
-                            isActive: false,
-                            isFieldToMove: false,
-                            isUnderAttack: false,
-                        };
-                    })
-                );
-                isMoveMode = false;
+        // start player move
+        if (isPlayerChecker(clickedCellData)) {
+            if (activeCheckerID === clickedCellData.id) {
+                clearStartMoveState();
+                return;
             }
+
+            activeCheckerID = clickedCellData.id;
+
+            const cellsToMove = getClosestCellsData(clickedCellData).filter(
+                (cellData) => isEmptyField(cellData)
+            );
+
+            const attackableCells = [];
+
+            setAttacks(clickedCellData);
+
+            function setAttacks(subjectCellData) {
+                console.log("work with " + subjectCellData.id);
+
+                const cellsWithEnemiesNearby = getClosestCellsData(
+                    subjectCellData
+                ).filter((cellData) => isEnemyChecker(cellData));
+
+                if (cellsWithEnemiesNearby.length > 0) {
+                    cellsWithEnemiesNearby.forEach((enemyData) => {
+                        const cellBehindData = getCellBehindData(
+                            subjectCellData,
+                            enemyData
+                        );
+
+                        if (cellBehindData && isEmptyField(cellBehindData)) {
+                            const previousLevelAttack = possibleAttacks.find(
+                                (item) => item.moveID === subjectCellData.id
+                            );
+
+                            if (!previousLevelAttack) {
+                                possibleAttacks.push({
+                                    moveID: cellBehindData.id,
+                                    enemyIDs: [enemyData.id],
+                                });
+                            } else {
+                                possibleAttacks.push({
+                                    moveID: cellBehindData.id,
+                                    enemyIDs: [
+                                        ...previousLevelAttack.enemyIDs,
+                                        enemyData.id,
+                                    ],
+                                });
+                            }
+
+                            cellsToMove.push(cellBehindData);
+                            attackableCells.push(enemyData);
+
+                            // repeat recursively for every next empty cell
+                            // behind every enemy checker which under attack
+                            setAttacks(cellBehindData);
+                        }
+                    });
+                }
+            }
+
+            console.log(possibleAttacks);
+
+            markActiveChecker(clickedCellData);
+            markAttacableCells(attackableCells);
+            markMovableCells(cellsToMove);
+
+            // move
+        } else if (clickedCellData.isFieldToMove) {
+            moveChecker(getData(activeCheckerID), clickedCellData);
+
+            const checkersUnderAttackIDs = possibleAttacks.find(
+                (attackObj) => attackObj.moveID === clickedCellData.id
+            )?.enemyIDs;
+
+            if (checkersUnderAttackIDs) {
+                const checkersUnderAttackData = checkersUnderAttackIDs.map(
+                    (id) => getData(id)
+                );
+
+                removeCheckers(checkersUnderAttackData);
+            }
+
+            clearStartMoveState();
+
+            isNextWhite = !isNextWhite;
+
+            // just clear start move
         } else {
-            setCellsData(
-                cellsData.map((cellData) => {
-                    // clear special marks for all
+            clearStartMoveState();
+        }
+
+        function getData(id) {
+            return cellsData.find((cellData) => cellData.id === id);
+        }
+
+        function getClosestCellsData(cellData) {
+            const id = cellData.id;
+
+            let possibleMoveCells = [];
+
+            const rowShift = isNextWhite ? -1 : 1;
+
+            // check cell on forward-left
+            if (id[2] !== "1")
+                possibleMoveCells.push(
+                    getData(`${+id[0] + rowShift}-${+id[2] - 1}`)
+                );
+            // check cell on forward-right
+            if (id[2] !== "8")
+                possibleMoveCells.push(
+                    getData(`${+id[0] + rowShift}-${+id[2] + 1}`)
+                );
+
+            return possibleMoveCells;
+        }
+
+        function isPlayerChecker(cellData) {
+            return (
+                (isNextWhite && cellData?.checker === "white") ||
+                (!isNextWhite && cellData?.checker === "black")
+            );
+        }
+
+        function isEnemyChecker(cellData) {
+            return (
+                (isNextWhite && cellData?.checker === "black") ||
+                (!isNextWhite && cellData?.checker === "white")
+            );
+        }
+
+        function getCellBehindData(subjectData, targetData) {
+            const rowShift = isNextWhite ? -1 : 1;
+
+            const rowToCheck = subjectData.row + rowShift;
+
+            // check field behind
+            const cellIndexToCheck =
+                subjectData.column > targetData.column
+                    ? subjectData.column - 2
+                    : subjectData.column + 2;
+
+            const isOnBoard =
+                rowToCheck > 0 &&
+                rowToCheck < 9 &&
+                cellIndexToCheck > 0 &&
+                cellIndexToCheck < 9;
+
+            const cellBehindID = isOnBoard
+                ? `${rowToCheck + rowShift}-${cellIndexToCheck}`
+                : null;
+
+            return getData(cellBehindID);
+        }
+
+        function isEmptyField(cellData) {
+            return !cellData?.checker;
+        }
+
+        function markActiveChecker(targetData) {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
+                    return cellData.id === targetData.id
+                        ? { ...cellData, isActive: true }
+                        : { ...cellData, isActive: false };
+                });
+            });
+        }
+
+        function markMovableCells(cellsToMoveData) {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
+                    return cellsToMoveData.find((cellToMoveData) => {
+                        return cellToMoveData.id === cellData.id;
+                    })
+                        ? { ...cellData, isFieldToMove: true }
+                        : { ...cellData, isFieldToMove: false };
+                });
+            });
+        }
+
+        function markAttacableCells(cellsToAttackData) {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
+                    return cellsToAttackData.find((cellToMoveData) => {
+                        return cellToMoveData.id === cellData.id;
+                    })
+                        ? { ...cellData, isUnderAttack: true }
+                        : cellData;
+                });
+            });
+        }
+
+        function removeAllMarks() {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
                     return {
                         ...cellData,
                         isActive: false,
-                        isFieldToMove: false,
                         isUnderAttack: false,
+                        isFieldToMove: false,
                     };
-                })
-            );
-
-            isMoveMode = false;
+                });
+            });
         }
 
-        // make move
-        if (
-            // if click on availible to move cell
-            possibleMovesObjects?.find(
-                (moveObj) => clickedCellData.id === moveObj.cellToMoveID
-            )
-        ) {
-            const activeID = cellsData.find(
-                (cellData) => cellData.isActive === true
-            ).id;
-
-            const targetMoveObj = possibleMovesObjects?.find(
-                (moveObj) => clickedCellData.id === moveObj.cellToMoveID
-            );
-
-            console.log(targetMoveObj);
-
+        function moveChecker(checkerCellData, targetCellData) {
             setCellsData(
                 cellsData
                     .map((cellData) => {
                         // place checker on new place
-                        return cellData.id === targetMoveObj.cellToMoveID
+                        return cellData.id === targetCellData.id
                             ? {
                                   ...cellData,
                                   checker: isNextWhite ? "white" : "black",
@@ -159,110 +281,29 @@ function Board() {
                     })
                     .map((cellData) => {
                         // remove checker from previous place
-                        return cellData.id === activeID
+                        return cellData.id === checkerCellData.id
                             ? { ...cellData, checker: null }
                             : cellData;
-                    })
-                    .map((cellData) => {
-                        // remove enemy
-                        return cellData.isUnderAttack &&
-                            targetMoveObj.enemyID === cellData.id
-                            ? { ...cellData, checker: null }
-                            : cellData;
-                    })
-                    .map((cellData) => {
-                        // clear active and possible moves
-                        return {
-                            ...cellData,
-                            isActive: false,
-                            isFieldToMove: false,
-                            isUnderAttack: false,
-                        };
                     })
             );
-
-            isMoveMode = false;
-            isNextWhite = !isNextWhite;
-        }
-    }
-
-    function getNextMoveIDs(id) {
-        const rowShift = isNextWhite ? -1 : 1;
-
-        // cells to check
-        let nextMovePossibleCells = getClosestCellsIDs(id);
-        const attack = getAttackIDs(nextMovePossibleCells);
-
-        nextMovePossibleCells = nextMovePossibleCells.map((id) => {
-            return { isAttack: false, cellToMoveID: id };
-        });
-
-        if (!attack) return nextMovePossibleCells;
-        else return [...nextMovePossibleCells, ...attack];
-
-        function getClosestCellsIDs(id) {
-            let nextMovePossibleCells = [];
-
-            // check cell on forward-left
-            if (id[2] !== "1")
-                nextMovePossibleCells.push(
-                    `${+id[0] + rowShift}-${+id[2] - 1}`
-                );
-            // check cell on forward-right
-            if (id[2] !== "8")
-                nextMovePossibleCells.push(
-                    `${+id[0] + rowShift}-${+id[2] + 1}`
-                );
-            return nextMovePossibleCells;
         }
 
-        function getAttackIDs(cellsToCheck) {
-            const possibleAttacks = [];
-
-            cellsToCheck.forEach((possibleMoveID) => {
-                // get data for target cell
-                const targetData = cellsData.find(
-                    (cellData) => cellData.id === possibleMoveID
-                );
-
-                // if is occupied - remove from possible fields
-                if (targetData.checker) {
-                    nextMovePossibleCells = nextMovePossibleCells.filter(
-                        (id) => id !== targetData.id
-                    );
-                }
-
-                // if is occupied by enemy
-                if (
-                    (isNextWhite && targetData.checker === "black") ||
-                    (!isNextWhite && targetData.checker === "white")
-                ) {
-                    const rowToCheck = targetData.row + rowShift;
-
-                    // check field behind
-                    const cellIndexToCheck =
-                        targetData.column < id[2]
-                            ? targetData.column - 1
-                            : targetData.column + 1;
-
-                    const cellToJumpOverID =
-                        rowToCheck + "-" + cellIndexToCheck;
-
-                    const isCanJumpOver = !cellsData.find(
-                        (cellData) => cellData.id === cellToJumpOverID
-                    ).checker;
-
-                    // create attack object
-                    if (isCanJumpOver)
-                        possibleAttacks.push({
-                            isAttack: true,
-                            cellToMoveID: cellToJumpOverID,
-                            enemyID: targetData.id,
-                        });
-                }
+        function removeCheckers(cellsToClearData) {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
+                    return cellsToClearData.find((cellToClearData) => {
+                        return cellToClearData.id === cellData.id;
+                    })
+                        ? { ...cellData, checker: null }
+                        : cellData;
+                });
             });
+        }
 
-            return possibleAttacks.length > 0 ? possibleAttacks : null;
+        function clearStartMoveState() {
+            activeCheckerID = null;
+            removeAllMarks();
+            possibleAttacks.length = 0;
         }
     }
 
@@ -285,14 +326,14 @@ function Cell({ cellData, onUpdateCellData }) {
     return (
         <div
             className={`cell
-            ${cellData.bg}
-            ${cellData.checker ? cellData.checker : ""}
-            ${cellData.isFieldToMove ? "possible-move" : ""}
-            ${cellData.isActive ? "active" : ""}
-            ${cellData.isUnderAttack ? "attack" : ""}
-            ${cellData.isCanPlay ? "available" : ""}
-            ${isNextWhite ? "" : "cell-inverse"}
-        `}
+                ${cellData.bg}
+                ${cellData.checker ? cellData.checker : ""}
+                ${cellData.isFieldToMove ? "possible-move" : ""}
+                ${cellData.isActive ? "active" : ""}
+                ${cellData.isUnderAttack ? "attack" : ""}
+                ${cellData.isCanPlay ? "available" : ""}
+                ${isNextWhite ? "" : "cell-inverse"}
+            `}
             onClick={() => onUpdateCellData(cellData)}
         >
             {cellData.id}
