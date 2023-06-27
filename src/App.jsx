@@ -6,25 +6,35 @@ let activeCheckerID = null;
 const possibleAttacks = [];
 
 export default function App() {
-    const [boardSide, setBoardSide] = useState("auto");
+    const [boardSide, setBoardSide] = useState("white");
 
-    function handleBoardSide(value) {
+    function handleSelectBoardSide(value) {
         setBoardSide(value);
     }
 
     return (
         <div>
+            <Menu
+                boardSide={boardSide}
+                onSelectBoardSide={handleSelectBoardSide}
+            />
             <Board boardSide={boardSide} />
-            <div className="menu">
-                <select
-                    value={boardSide}
-                    onChange={(event) => handleBoardSide(event.target.value)}
-                >
-                    <option value="auto">Side: auto</option>
-                    <option value="white">Side: white</option>
-                    <option value="black">Side: black</option>
-                </select>
-            </div>
+        </div>
+    );
+}
+
+function Menu({ boardSide, onSelectBoardSide }) {
+    return (
+        <div className="menu">
+            <select
+                value={boardSide}
+                onChange={(event) => onSelectBoardSide(event.target.value)}
+            >
+                <option value="auto">Side: auto</option>
+                <option value="white">Side: white</option>
+                <option value="black">Side: black</option>
+                <option value="90">Side: 90°</option>
+            </select>
         </div>
     );
 }
@@ -380,6 +390,10 @@ function Board({ boardSide }) {
 
         case "black":
             rotateState = "board-inverse";
+            break;
+
+        case "90":
+            rotateState = "board-90";
             break;
     }
 

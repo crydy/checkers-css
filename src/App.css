@@ -22,15 +22,20 @@
     --color-checker-shadow-attack: red;
     --color-checker-shadow-available: green;
 
-    --size-cell: 70px;
+    --size-cell: min(10.5vh, 10vw);
     --size-cell-outline: 2px;
 
-    --size-checker: 55px;
-    --size-checker-core: 35px;
+    --size-checker: calc(var(--size-cell) * 0.8);
+    --size-checker-core: calc(var(--size-checker) * 0.6);
     --size-checker-outline: var(--size-cell-outline);
-    --size-checker-active-shadow: 15px;
+    --size-checker-shadow: 15px;
 
     --size-possible-move: calc(var(--size-cell) * 0.75);
+}
+
+body {
+    background-image: url("./wood-texture.png");
+    background-size: contain;
 }
 
 .menu {
@@ -51,29 +56,48 @@
 
     border: 10px solid rgb(105, 87, 62);
     outline: 4px solid rgb(82, 54, 54);
+
+    position: relative;
 }
 
-.board-inverse,
-.cell-inverse {
+.board::before {
+    pointer-events: none;
+    z-index: 1;
+    position: absolute;
+    content: "";
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: rotate(90deg);
+    opacity: 0.23;
+
+    background-image: url("./wood-texture-alpha.png");
+    background-size: contain;
+}
+
+.board-inverse {
     transform: rotate(180deg);
 }
 
-.row {
-    display: flex;
+.board-90 {
+    transform: rotate(90deg);
 }
 
 .cell {
-    font-size: calc(var(--size-cell) * 0.18);
-    text-align: left;
-    color: rgb(46, 233, 62);
-    line-height: 0.7;
-    user-select: none;
+    position: relative;
     background-color: var(--color-cell-bg-dark);
+
     border: calc(var(--size-cell-outline) / 2) solid var(--color-cell-outline);
     outline: calc(var(--size-cell-outline) / 2) solid var(--color-cell-outline);
     width: var(--size-cell);
     height: var(--size-cell);
-    position: relative;
+
+    font-size: calc(var(--size-cell) * 0.18);
+    color: rgb(46, 233, 62);
+    text-align: left;
+    user-select: none;
+    line-height: 0.7;
 }
 
 .dark {
@@ -86,26 +110,41 @@
 
 .checker::before,
 .checker::after {
+    z-index: 2;
     position: absolute;
     content: "";
     border-radius: 50%;
 }
 
+.checker::after {
+    opacity: 0.7;
+}
+
 .checker::before {
+    background-size: contain;
+
     width: var(--size-checker);
     height: var(--size-checker);
+
     top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
     left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
+
+    box-shadow: 0 0 var(--size-checker-shadow) black;
 }
 
 .checker::after {
     width: var(--size-checker-core);
     height: var(--size-checker-core);
+
     top: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
     left: calc(var(--size-cell) / 2 - var(--size-checker-core) / 2);
+
+    box-shadow: inset 0 0 calc(var(--size-checker-shadow) * 0.4) black;
 }
 
 .black::before {
+    background-image: url("./checker-texture-black.png");
+
     background-color: var(--color-black-body);
     outline: var(--size-checker-outline) solid var(--color-black-outline);
 }
@@ -116,6 +155,8 @@
 }
 
 .white::before {
+    background-image: url("./checker-texture-white.png");
+
     background-color: var(--color-white-body);
     outline: var(--size-checker-outline) solid var(--color-white-outline);
 }
@@ -127,12 +168,12 @@
 
 .active::before,
 .active:hover::before {
-    box-shadow: 0 0 var(--size-checker-active-shadow)
+    box-shadow: 0 0 var(--size-checker-shadow)
         var(--color-checker-shadow-active);
 }
 
 .attack::before {
-    box-shadow: 0 0 var(--size-checker-active-shadow)
+    box-shadow: 0 0 var(--size-checker-shadow)
         var(--color-checker-shadow-attack);
 }
 
@@ -143,11 +184,12 @@
 
     width: var(--size-checker);
     height: var(--size-checker);
+
     top: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
     left: calc(var(--size-cell) / 2 - var(--size-checker) / 2);
 
     background-color: transparent;
-    box-shadow: 0 0 var(--size-checker-active-shadow)
+    box-shadow: 0 0 var(--size-checker-shadow)
         var(--color-checker-shadow-available);
 }
 
@@ -160,12 +202,12 @@
 }
 
 .movable:hover::before {
-    box-shadow: 0 0 var(--size-checker-active-shadow)
+    box-shadow: 0 0 var(--size-checker-shadow)
         var(--color-checker-shadow-available);
 }
 
 .movable:active::before {
-    box-shadow: 0 0 var(--size-checker-active-shadow)
+    box-shadow: 0 0 var(--size-checker-shadow)
         var(--color-checker-shadow-active);
 }
 
