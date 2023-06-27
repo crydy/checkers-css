@@ -1,8 +1,12 @@
 #root {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 2rem;
     text-align: center;
+}
+
+/* remove the blue blinking highlight on click event on mobile */
+* {
+    -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -114,6 +118,7 @@ body {
     position: absolute;
     content: "";
     border-radius: 50%;
+    transition: all 0.2s ease;
 }
 
 .checker::after {
