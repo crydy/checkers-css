@@ -10,9 +10,22 @@
 }
 
 :root {
+    --time-transition-shadow: 0.2s;
+
+    --size-cell: min(10.5vh, 11.5vw);
+    --size-cell-outline: calc(var(--size-cell) * 0.05);
+
+    --size-board-border: calc(var(--size-cell) * 0.125);
+    --size-board-outline: calc(var(--size-cell) * 0.05);
+
+    --size-checker: calc(var(--size-cell) * 0.8);
+    --size-checker-core: calc(var(--size-checker) * 0.6);
+    --size-checker-outline: var(--size-cell-outline);
+    --size-checker-shadow: calc(var(--size-checker) * 0.3);
+
     --color-cell-outline: rgb(153, 129, 129);
-    --color-cell-bg-dark: rgb(109, 85, 85);
-    --color-cell-bg-bright: rgb(167, 147, 147);
+    --color-cell-bg-dark: rgb(124, 104, 98);
+    --color-cell-bg-bright: rgb(179, 161, 161);
 
     --color-black-body: rgb(27, 20, 20);
     --color-black-core: rgb(39, 29, 29);
@@ -22,19 +35,14 @@
     --color-white-core: rgb(97, 85, 76);
     --color-white-outline: rgb(37, 35, 30);
 
-    --color-checker-shadow-active: yellow;
-    --color-checker-shadow-attack: red;
-    --color-checker-shadow-available: green;
+    --color-checker-core-king: rgb(117, 70, 70);
 
-    --size-cell: min(10.5vh, 10vw);
-    --size-cell-outline: 2px;
+    --color-checker-shadow-active: rgb(235, 235, 185);
+    --color-checker-shadow-attack: rgb(219, 89, 89);
+    --color-checker-shadow-available: rgb(191, 235, 185);
 
-    --size-checker: calc(var(--size-cell) * 0.8);
-    --size-checker-core: calc(var(--size-checker) * 0.6);
-    --size-checker-outline: var(--size-cell-outline);
-    --size-checker-shadow: 15px;
-
-    --size-possible-move: calc(var(--size-cell) * 0.75);
+    --color-board-border: rgb(105, 87, 62);
+    --color-board-outline: rgb(82, 54, 54);
 }
 
 body {
@@ -44,6 +52,8 @@ body {
 
 .menu {
     --indent: 10px;
+
+    z-index: 2;
 
     position: absolute;
     left: var(--indent);
@@ -58,8 +68,8 @@ body {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
 
-    border: 10px solid rgb(105, 87, 62);
-    outline: 4px solid rgb(82, 54, 54);
+    border: var(--size-board-border) solid var(--color-board-border);
+    outline: var(--size-board-outline) solid var(--color-board-outline);
 
     position: relative;
 }
@@ -118,7 +128,7 @@ body {
     position: absolute;
     content: "";
     border-radius: 50%;
-    transition: all 0.2s ease;
+    transition: box-shadow var(--time-transition-shadow) ease;
 }
 
 .checker::after {
@@ -217,5 +227,5 @@ body {
 }
 
 .king::after {
-    background-color: rgb(117, 70, 70);
+    background-color: var(--color-checker-core-king);
 }
