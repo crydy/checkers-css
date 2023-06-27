@@ -33,6 +33,18 @@
     --size-possible-move: calc(var(--size-cell) * 0.75);
 }
 
+.menu {
+    --indent: 10px;
+
+    position: absolute;
+    left: var(--indent);
+    top: var(--indent);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--indent);
+}
+
 .board {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -43,7 +55,7 @@
 
 .board-inverse,
 .cell-inverse {
-    /* transform: rotate(180deg); */
+    transform: rotate(180deg);
 }
 
 .row {

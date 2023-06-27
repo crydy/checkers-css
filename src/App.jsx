@@ -6,14 +6,30 @@ let activeCheckerID = null;
 const possibleAttacks = [];
 
 export default function App() {
+    const [boardSide, setBoardSide] = useState("auto");
+
+    function handleBoardSide(value) {
+        setBoardSide(value);
+    }
+
     return (
         <div>
-            <Board />
+            <Board boardSide={boardSide} />
+            <div className="menu">
+                <select
+                    value={boardSide}
+                    onChange={(event) => handleBoardSide(event.target.value)}
+                >
+                    <option value="auto">Side: auto</option>
+                    <option value="white">Side: white</option>
+                    <option value="black">Side: black</option>
+                </select>
+            </div>
         </div>
     );
 }
 
-function Board() {
+function Board({ boardSide }) {
     const [cellsData, setCellsData] = useState(createInitialData());
 
     function createInitialData() {
@@ -133,8 +149,8 @@ function Board() {
             }
 
             setActiveChecker(clickedCellData);
-            markAttacableCells(attackableCells);
-            markMovableCells(cellsToMove);
+            setAttacableCells(attackableCells);
+            setMovableCells(cellsToMove);
 
             // move
         } else if (clickedCellData.isFieldToMove) {
@@ -161,7 +177,7 @@ function Board() {
                 (!isNextWhite && clickedCellData.row === 8);
 
             if (isLastRow && !activeCheckerData.isKing)
-                createKing(clickedCellData);
+                setKing(clickedCellData);
 
             isNextWhite = !isNextWhite;
 
@@ -234,6 +250,20 @@ function Board() {
             return getData(cellBehindID);
         }
 
+        function isPlayerChecker(cellData) {
+            return (
+                (isNextWhite && cellData?.checker === "white") ||
+                (!isNextWhite && cellData?.checker === "black")
+            );
+        }
+
+        function isEnemyChecker(cellData) {
+            return (
+                (isNextWhite && cellData?.checker === "black") ||
+                (!isNextWhite && cellData?.checker === "white")
+            );
+        }
+
         function isEmptyField(cellData) {
             return !cellData?.checker;
         }
@@ -248,7 +278,7 @@ function Board() {
             });
         }
 
-        function createKing(targetCellData) {
+        function setKing(targetCellData) {
             setCellsData((prevState) => {
                 return prevState.map((cellData) => {
                     return cellData.id === targetCellData.id
@@ -258,7 +288,7 @@ function Board() {
             });
         }
 
-        function markMovableCells(cellsToMoveData) {
+        function setMovableCells(cellsToMoveData) {
             setCellsData((prevState) => {
                 return prevState.map((cellData) => {
                     return cellsToMoveData?.find((cellToMoveData) => {
@@ -270,7 +300,7 @@ function Board() {
             });
         }
 
-        function markAttacableCells(cellsToAttackData) {
+        function setAttacableCells(cellsToAttackData) {
             setCellsData((prevState) => {
                 return prevState.map((cellData) => {
                     return cellsToAttackData.find((cellToMoveData) => {
@@ -282,7 +312,7 @@ function Board() {
             });
         }
 
-        function removeAllMarks() {
+        function clearBeforeMoveStates() {
             setCellsData((prevState) => {
                 return prevState.map((cellData) => {
                     return {
@@ -331,13 +361,30 @@ function Board() {
 
         function clearStartMoveState() {
             activeCheckerID = null;
-            removeAllMarks();
+            clearBeforeMoveStates();
             possibleAttacks.length = 0;
         }
     }
 
+    let rotateState;
+
+    switch (boardSide) {
+        case "auto":
+            rotateState =
+                isNextWhite && boardSide === "auto" ? "" : "board-inverse";
+            break;
+
+        case "white":
+            rotateState = "";
+            break;
+
+        case "black":
+            rotateState = "board-inverse";
+            break;
+    }
+
     return (
-        <div className={`board ${isNextWhite ? "" : "board-inverse"}`}>
+        <div className={`board ${rotateState}`}>
             {cellsData.map((cellData) => {
                 return (
                     <Cell
@@ -352,8 +399,10 @@ function Board() {
 }
 
 function Cell({ cellData, onUpdateCellData }) {
-    const isMovalbe =
-        cellData.checker && isPlayerChecker(cellData) && !cellData.isActive;
+    const isPlayerChecker =
+        (isNextWhite && cellData?.checker === "white") ||
+        (!isNextWhite && cellData?.checker === "black");
+    const isMovalbe = cellData.checker && isPlayerChecker && !cellData.isActive;
 
     return (
         <div
@@ -361,32 +410,15 @@ function Cell({ cellData, onUpdateCellData }) {
                 ${cellData.bg}
                 ${cellData.checker ? `checker ${cellData.checker}` : ""}
                 ${isMovalbe && "movable"}
-                ${cellData.checker && isPlayerChecker(cellData) && "pointer"}
+                ${cellData.checker && isPlayerChecker && "pointer"}
                 ${cellData.isFieldToMove ? "possible-move" : ""}
                 ${cellData.isActive ? "active" : ""}
                 ${cellData.isKing ? "king" : ""}
                 ${cellData.isUnderAttack ? "attack" : ""}
-                ${isNextWhite ? "" : "cell-inverse"}
             `}
             onClick={() => onUpdateCellData(cellData)}
         >
-            {cellData.id}
+            {/* {cellData.id} */}
         </div>
-    );
-}
-
-//---------------- Common functions ------------------
-
-function isPlayerChecker(cellData) {
-    return (
-        (isNextWhite && cellData?.checker === "white") ||
-        (!isNextWhite && cellData?.checker === "black")
-    );
-}
-
-function isEnemyChecker(cellData) {
-    return (
-        (isNextWhite && cellData?.checker === "black") ||
-        (!isNextWhite && cellData?.checker === "white")
     );
 }
