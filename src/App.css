@@ -17,6 +17,7 @@
 
     --size-board-border: calc(var(--size-cell) * 0.125);
     --size-board-outline: calc(var(--size-cell) * 0.05);
+    --size-board-shadow: calc(var(--size-checker) * 0.5);
 
     --size-checker: calc(var(--size-cell) * 0.8);
     --size-checker-core: calc(var(--size-checker) * 0.6);
@@ -43,17 +44,21 @@
 
     --color-board-border: rgb(105, 87, 62);
     --color-board-outline: rgb(82, 54, 54);
+
+    --color-menu-item: rgb(48, 35, 35);
 }
 
 body {
+    overflow: hidden;
     background-image: url("./wood-texture.png");
     background-size: contain;
+    filter: saturate(70%);
 }
 
 .menu {
     --indent: 10px;
 
-    z-index: 2;
+    z-index: 3;
 
     position: absolute;
     left: var(--indent);
@@ -64,14 +69,29 @@ body {
     gap: var(--indent);
 }
 
+.menu-button {
+    text-align: left;
+    background-color: var(--color-menu-item);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 1rem;
+}
+
+.menu-select {
+    background-color: var(--color-menu-item);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 1rem;
+}
+
 .board {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
 
     border: var(--size-board-border) solid var(--color-board-border);
     outline: var(--size-board-outline) solid var(--color-board-outline);
-
-    position: relative;
+    box-shadow: 0 0 var(--size-board-shadow) black;
 }
 
 .board::before {
@@ -161,7 +181,7 @@ body {
     background-image: url("./checker-texture-black.png");
 
     background-color: var(--color-black-body);
-    outline: var(--size-checker-outline) solid var(--color-black-outline);
+    outline: var(--size-checker-outline) solid var(--color-white-outline);
 }
 
 .black::after {

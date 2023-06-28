@@ -1,46 +1,31 @@
 import { useState } from "react";
 import "./App.css";
 
-let isNextWhite = true;
+let isNextWhite;
 let activeCheckerID = null;
 const possibleAttacks = [];
 
 export default function App() {
+    const [cellsData, setCellsData] = useState(createInitialData());
+    const [history, setHistory] = useState([cellsData]);
     const [boardSide, setBoardSide] = useState("white");
+    isNextWhite = history.length % 2 === 0 ? false : true;
 
     function handleSelectBoardSide(value) {
         setBoardSide(value);
     }
 
-    return (
-        <div>
-            <Menu
-                boardSide={boardSide}
-                onSelectBoardSide={handleSelectBoardSide}
-            />
-            <Board boardSide={boardSide} />
-        </div>
-    );
-}
+    function handleUndoLastMove() {
+        setCellsData(history.at(-1));
+        setHistory(history.slice(0, history.length - 1));
+    }
 
-function Menu({ boardSide, onSelectBoardSide }) {
-    return (
-        <div className="menu">
-            <select
-                value={boardSide}
-                onChange={(event) => onSelectBoardSide(event.target.value)}
-            >
-                <option value="auto">Side: auto</option>
-                <option value="white">Side: white</option>
-                <option value="black">Side: black</option>
-                <option value="90">Side: 90°</option>
-            </select>
-        </div>
-    );
-}
+    function handleGoBackInHistory(historyIndex) {
+        if (!historyIndex) return;
 
-function Board({ boardSide }) {
-    const [cellsData, setCellsData] = useState(createInitialData());
+        setCellsData(history[historyIndex]);
+        setHistory(history.slice(0, historyIndex));
+    }
 
     function createInitialData() {
         const cellsData = [];
@@ -85,7 +70,85 @@ function Board({ boardSide }) {
         return cellsData;
     }
 
-    function handleSellData(clickedCellData) {
+    return (
+        <div>
+            <Menu
+                boardSide={boardSide}
+                onSelectBoardSide={handleSelectBoardSide}
+                history={history}
+                onUndoLastMove={handleUndoLastMove}
+                onGoBackInHistory={handleGoBackInHistory}
+            />
+            <Board
+                boardSide={boardSide}
+                cellsData={cellsData}
+                setCellsData={setCellsData}
+                history={history}
+                setHistory={setHistory}
+            />
+        </div>
+    );
+}
+
+function Menu({
+    boardSide,
+    onSelectBoardSide,
+    history,
+    onUndoLastMove,
+    onGoBackInHistory,
+}) {
+    return (
+        <div className="menu">
+            <select
+                className="menu-select"
+                value={boardSide}
+                onChange={(event) => onSelectBoardSide(event.target.value)}
+            >
+                <option value="auto">Side: auto</option>
+                <option value="white">Side: white</option>
+                <option value="black">Side: black</option>
+                <option value="90">Side: 90°</option>
+            </select>
+
+            {history.length > 2 && (
+                <select
+                    className="menu-select"
+                    onChange={(event) =>
+                        onGoBackInHistory(+event.target.value + 1)
+                    }
+                >
+                    <option value="">History:</option>
+                    {history
+                        .filter((_, index) => index !== 0)
+                        .map((_, index) => (
+                            <option
+                                value={index}
+                                key={index}
+                                style={
+                                    index === 0
+                                        ? { color: "red" }
+                                        : { color: "rgb(255, 113, 70)" }
+                                }
+                            >
+                                {index === 0
+                                    ? "-- Start game --"
+                                    : `- go to move ${index + 1}`}
+                            </option>
+                        ))}
+                </select>
+            )}
+
+            {history.length > 1 && (
+                <button className="menu-button" onClick={onUndoLastMove}>
+                    Undo last move
+                </button>
+            )}
+        </div>
+    );
+}
+
+function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
+    function handleChangeSellsData(clickedCellData) {
         // start player move
         if (isPlayerChecker(clickedCellData)) {
             if (activeCheckerID === clickedCellData.id) {
@@ -190,6 +253,19 @@ function Board({ boardSide }) {
                 setKing(clickedCellData);
 
             isNextWhite = !isNextWhite;
+
+            setHistory((prevState) => [
+                ...prevState,
+                cellsData.map((cellData) => {
+                    return {
+                        ...cellData,
+                        isActive: false,
+                        isFieldToMove: false,
+                        isEnemyChecker: false,
+                        isUnderAttack: false,
+                    };
+                }),
+            ]);
 
             // just clear start move
         } else {
@@ -404,7 +480,7 @@ function Board({ boardSide }) {
                     <Cell
                         cellData={cellData}
                         key={cellData.id}
-                        onUpdateCellData={handleSellData}
+                        onUpdateCellData={handleChangeSellsData}
                     />
                 );
             })}
