@@ -10,10 +10,7 @@
 }
 
 :root {
-    --time-transition-shadow: 0.2s;
-
-    --size-cell: min(10.5vh, 11.5vw);
-    --size-cell-outline: calc(var(--size-cell) * 0.05);
+    --size-cell: min(10.5vh, 12vw);
 
     --size-board-border: calc(var(--size-cell) * 0.125);
     --size-board-outline: calc(var(--size-cell) * 0.05);
@@ -21,10 +18,11 @@
 
     --size-checker: calc(var(--size-cell) * 0.8);
     --size-checker-core: calc(var(--size-checker) * 0.6);
-    --size-checker-outline: var(--size-cell-outline);
+    --size-checker-outline: calc(var(--size-cell) * 0.05);
     --size-checker-shadow: calc(var(--size-checker) * 0.3);
 
-    --color-cell-outline: rgb(153, 129, 129);
+    --time-transition-shadow: 0.2s;
+
     --color-cell-bg-dark: rgb(124, 104, 98);
     --color-cell-bg-bright: rgb(179, 161, 161);
 
@@ -50,7 +48,7 @@
 
 body {
     overflow: hidden;
-    background-image: url("./wood-texture.png");
+    background-image: url("/wood-texture.png");
     background-size: contain;
     filter: saturate(70%);
 }
@@ -106,7 +104,7 @@ body {
     transform: rotate(90deg);
     opacity: 0.23;
 
-    background-image: url("./wood-texture-alpha.png");
+    background-image: url("/wood-texture-alpha.png");
     background-size: contain;
 }
 
@@ -122,8 +120,6 @@ body {
     position: relative;
     background-color: var(--color-cell-bg-dark);
 
-    border: calc(var(--size-cell-outline) / 2) solid var(--color-cell-outline);
-    outline: calc(var(--size-cell-outline) / 2) solid var(--color-cell-outline);
     width: var(--size-cell);
     height: var(--size-cell);
 
@@ -153,7 +149,6 @@ body {
     position: absolute;
     content: "";
     border-radius: 50%;
-    /* transition: box-shadow var(--time-transition-shadow) ease; */
 }
 
 .checker::after {
@@ -183,7 +178,7 @@ body {
 }
 
 .black::before {
-    background-image: url("./checker-texture-black.png");
+    background-image: url("/checker-texture-black.png");
 
     background-color: var(--color-black-body);
     outline: var(--size-checker-outline) solid var(--color-white-outline);
@@ -195,7 +190,7 @@ body {
 }
 
 .white::before {
-    background-image: url("./checker-texture-white.png");
+    background-image: url("/checker-texture-white.png");
 
     background-color: var(--color-white-body);
     outline: var(--size-checker-outline) solid var(--color-white-outline);
@@ -206,19 +201,14 @@ body {
     outline: var(--size-checker-outline) solid var(--color-white-outline);
 }
 
-.controversial::before {
-    box-shadow: 0 0 var(--size-checker-shadow) rgb(0, 98, 128) !important;
+.movable:hover::before {
+    box-shadow: 0 0 var(--size-checker-shadow)
+        var(--color-checker-shadow-available);
 }
 
-.controversial-active::before {
-    box-shadow: 0 0 var(--size-checker-shadow) rgb(100, 7, 0) !important;
-}
-
-.controversial::before,
-.controversial::after,
-.controversial-active::before,
-.controversial-active::after {
-    cursor: pointer;
+.movable:active::before {
+    box-shadow: 0 0 var(--size-checker-shadow)
+        var(--color-checker-shadow-active);
 }
 
 .active::before {
@@ -226,12 +216,15 @@ body {
         var(--color-checker-shadow-active);
 }
 
-.attack::before {
-    box-shadow: 0 0 var(--size-checker-shadow)
-        var(--color-checker-shadow-attack);
+.king::after {
+    background-color: var(--color-checker-core-king);
 }
 
-.possible-move::before {
+.field-to-move {
+    cursor: pointer;
+}
+
+.field-to-move::before {
     position: absolute;
     content: "";
     border-radius: 50%;
@@ -247,24 +240,26 @@ body {
         var(--color-checker-shadow-available);
 }
 
-.possible-move {
+.under-attack::before {
+    box-shadow: 0 0 var(--size-checker-shadow)
+        var(--color-checker-shadow-attack);
+}
+
+.controversial::before {
+    box-shadow: 0 0 var(--size-checker-shadow) rgb(0, 98, 128) !important;
+}
+
+.controversial-hover::before {
+    box-shadow: 0 0 var(--size-checker-shadow) rgb(100, 7, 0) !important;
+}
+
+.controversial::before,
+.controversial::after,
+.controversial-hover::before,
+.controversial-hover::after {
     cursor: pointer;
 }
 
 .pointer {
     cursor: pointer;
-}
-
-.movable:hover::before {
-    box-shadow: 0 0 var(--size-checker-shadow)
-        var(--color-checker-shadow-available);
-}
-
-.movable:active::before {
-    box-shadow: 0 0 var(--size-checker-shadow)
-        var(--color-checker-shadow-active);
-}
-
-.king::after {
-    background-color: var(--color-checker-core-king);
 }
