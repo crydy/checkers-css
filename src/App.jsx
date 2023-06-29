@@ -1,12 +1,19 @@
 import { useState } from "react";
 import "./App.css";
+import testInitData from "./testInitData";
+
+let isDevMode;
+isDevMode = true;
 
 let isNextWhite;
 let activeCheckerID = null;
 const possibleAttacks = [];
 
 export default function App() {
-    const [cellsData, setCellsData] = useState(createInitialData());
+    // const [cellsData, setCellsData] = useState(createInitialData());
+    const [cellsData, setCellsData] = isDevMode
+        ? useState(testInitData)
+        : useState(createInitialData());
     const [history, setHistory] = useState([cellsData]);
     const [boardSide, setBoardSide] = useState("white");
     isNextWhite = history.length % 2 === 0 ? false : true;
@@ -60,6 +67,8 @@ export default function App() {
                     isFieldToMove: false,
                     isActive: false,
                     isUnderAttack: false,
+                    isControversial: false,
+                    isControversialHover: false,
                 };
 
                 cellsData.push(currentCellData);
@@ -140,7 +149,7 @@ function Menu({
 
             {history.length > 1 && (
                 <button className="menu-button" onClick={onUndoLastMove}>
-                    Undo last move
+                    &#x21D0; Undo last move
                 </button>
             )}
         </div>
@@ -158,101 +167,187 @@ function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
 
             activeCheckerID = clickedCellData.id;
 
-            const cellsToMove = getClosestCellsData(
+            const cellsToMoveData = getClosestCellsData(
                 clickedCellData,
                 clickedCellData.isKing
             ).filter((cellData) => isEmptyField(cellData));
 
-            const attackableCells = [];
-
-            // recurstion limit base
-            const argumentsOfSetAttacksCalls = [];
+            const attackableEnemiesData = [];
+            let lastChainID;
 
             // function works recursively and call itself
             // for every next empty cell behind enemy checker
             setAttacks(clickedCellData);
 
-            function setAttacks(subjectCellData) {
-                // prevent backward movement in chain of cheking cells to avoid forever loop
-                if (argumentsOfSetAttacksCalls.includes(subjectCellData.id))
-                    return;
-                argumentsOfSetAttacksCalls.push(subjectCellData.id);
+            function setAttacks(startCellData) {
+                const previousLevelAttack = possibleAttacks.find(
+                    (attackObj) =>
+                        attackObj.moveID === startCellData.id &&
+                        attackObj.chainID === lastChainID
+                );
 
-                const cellsWithEnemiesNearby = getClosestCellsData(
-                    subjectCellData,
+                const enemiesNearbyData = getClosestCellsData(
+                    startCellData,
                     clickedCellData.isKing
                 ).filter((cellData) => isEnemyChecker(cellData));
 
-                if (cellsWithEnemiesNearby.length > 0) {
-                    cellsWithEnemiesNearby.forEach((enemyData) => {
-                        const cellBehindData = getCellBehindData(
-                            subjectCellData,
+                console.log(enemiesNearbyData);
+
+                if (enemiesNearbyData.length > 0) {
+                    enemiesNearbyData.forEach((enemyData) => {
+                        const cellBehindEnemyData = getCellBehindData(
+                            startCellData,
                             enemyData
                         );
 
-                        if (cellBehindData && isEmptyField(cellBehindData)) {
-                            const previousLevelAttack = possibleAttacks.find(
-                                (item) => item.moveID === subjectCellData.id
+                        const isCellBehindEnemyEmpty =
+                            cellBehindEnemyData &&
+                            isEmptyField(cellBehindEnemyData);
+
+                        const isNotPreviousChainLink =
+                            !previousLevelAttack?.cellsToPassIDs.includes(
+                                cellBehindEnemyData?.id
                             );
 
+                        if (isCellBehindEnemyEmpty && isNotPreviousChainLink) {
                             if (!previousLevelAttack) {
+                                // start new chain
+                                const newChainID = createNewID();
+                                lastChainID = newChainID;
+
+                                // first level attack object
                                 possibleAttacks.push({
-                                    moveID: cellBehindData.id,
+                                    chainID: newChainID,
+                                    moveID: cellBehindEnemyData.id,
                                     enemyIDs: [enemyData.id],
+                                    cellsToPassIDs: [],
                                 });
                             } else {
+                                // continue the chain
+                                lastChainID = previousLevelAttack.chainID;
+
+                                // next level attack object
+                                // gather all previous cells to pass and enemies to attack
                                 possibleAttacks.push({
-                                    moveID: cellBehindData.id,
+                                    chainID: previousLevelAttack.chainID,
+                                    moveID: cellBehindEnemyData.id,
                                     enemyIDs: [
                                         ...previousLevelAttack.enemyIDs,
                                         enemyData.id,
                                     ],
+                                    cellsToPassIDs: [
+                                        ...previousLevelAttack.cellsToPassIDs,
+                                        previousLevelAttack.moveID,
+                                    ],
                                 });
                             }
 
-                            cellsToMove.push(cellBehindData);
-                            attackableCells.push(enemyData);
+                            cellsToMoveData.push(cellBehindEnemyData);
+                            attackableEnemiesData.push(enemyData);
 
                             // repeat recursively for every next empty cell
                             // behind every enemy checker which under attack
-                            setAttacks(cellBehindData);
+                            setAttacks(cellBehindEnemyData);
                         }
                     });
                 }
             }
 
             setActiveChecker(clickedCellData);
-            setAttacableCells(attackableCells);
-            setMovableCells(cellsToMove);
+            setAttacableCells(attackableEnemiesData);
+            setMovableCells(cellsToMoveData);
+
+            console.log("Possible attacks:");
+            console.log(possibleAttacks);
 
             // move
-        } else if (clickedCellData.isFieldToMove) {
-            const activeCheckerData = getData(activeCheckerID);
-
-            moveChecker(activeCheckerData, clickedCellData);
-
-            const checkersUnderAttackIDs = possibleAttacks.find(
+        } else if (
+            clickedCellData.isFieldToMove &&
+            !clickedCellData.isControversial
+        ) {
+            const currentAttackVarians = possibleAttacks.filter(
                 (attackObj) => attackObj.moveID === clickedCellData.id
-            )?.enemyIDs;
+            );
 
-            if (checkersUnderAttackIDs) {
-                const checkersUnderAttackData = checkersUnderAttackIDs.map(
-                    (id) => getData(id)
+            // if (several attacks with one target cell are possible
+            if (currentAttackVarians.length > 1) {
+                currentAttackVarians.forEach(
+                    (attackObj) => (attackObj.isControversial = true)
                 );
 
-                removeCheckers(checkersUnderAttackData);
+                const contrCellsData = currentAttackVarians.map((attackObj) =>
+                    [...attackObj.enemyIDs, ...attackObj.cellsToPassIDs].map(
+                        (id) => getData(id)
+                    )
+                );
+
+                contrCellsData.forEach((contrIDsArray) => {
+                    setControversialCells(contrIDsArray);
+                });
+
+                return;
+
+                // regular move or attack move without contraversial
+            } else {
+                const activeCheckerData = getData(activeCheckerID);
+                moveChecker(activeCheckerData, clickedCellData);
+
+                const checkersUnderAttackIDs = possibleAttacks.find(
+                    (attackObj) => attackObj.moveID === clickedCellData.id
+                )?.enemyIDs;
+
+                if (checkersUnderAttackIDs) {
+                    const checkersUnderAttackData = checkersUnderAttackIDs.map(
+                        (id) => getData(id)
+                    );
+
+                    removeCheckers(checkersUnderAttackData);
+                }
+
+                clearStartMoveState();
+
+                const isLastRow =
+                    (isNextWhite && clickedCellData.row === 1) ||
+                    (!isNextWhite && clickedCellData.row === 8);
+
+                if (isLastRow && !activeCheckerData.isKing)
+                    setKing(clickedCellData);
+
+                isNextWhite = !isNextWhite;
+
+                setHistory((prevState) => [
+                    ...prevState,
+                    cellsData.map((cellData) => {
+                        return {
+                            ...cellData,
+                            isActive: false,
+                            isFieldToMove: false,
+                            isEnemyChecker: false,
+                            isUnderAttack: false,
+                            isControversial: false,
+                            isControversialHover: false,
+                        };
+                    }),
+                ]);
             }
 
+            // attack move with resolving contraversial
+        } else if (clickedCellData.isControversial) {
+            const thisAttackObj = possibleAttacks.find(
+                (attackObj) =>
+                    (attackObj.isControversial &&
+                        attackObj.enemyIDs.includes(clickedCellData.id)) ||
+                    (attackObj.isControversial &&
+                        attackObj.cellsToPassIDs.includes(clickedCellData.id))
+            );
+
+            moveChecker(
+                getData(activeCheckerID),
+                getData(thisAttackObj.moveID)
+            );
+
+            removeCheckers(thisAttackObj.enemyIDs.map((id) => getData(id)));
             clearStartMoveState();
-
-            const isLastRow =
-                (isNextWhite && clickedCellData.row === 1) ||
-                (!isNextWhite && clickedCellData.row === 8);
-
-            if (isLastRow && !activeCheckerData.isKing)
-                setKing(clickedCellData);
-
-            isNextWhite = !isNextWhite;
 
             setHistory((prevState) => [
                 ...prevState,
@@ -263,11 +358,13 @@ function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
                         isFieldToMove: false,
                         isEnemyChecker: false,
                         isUnderAttack: false,
+                        isControversial: false,
+                        isControversialHover: false,
                     };
                 }),
             ]);
 
-            // just clear start move
+            // cancel move
         } else {
             clearStartMoveState();
         }
@@ -386,6 +483,18 @@ function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
             });
         }
 
+        function setControversialCells(cellsToMarkData) {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
+                    return cellsToMarkData?.find((cellToMoveData) => {
+                        return cellToMoveData?.id === cellData.id;
+                    })
+                        ? { ...cellData, isControversial: true }
+                        : cellData;
+                });
+            });
+        }
+
         function setAttacableCells(cellsToAttackData) {
             setCellsData((prevState) => {
                 return prevState.map((cellData) => {
@@ -406,6 +515,8 @@ function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
                         isActive: false,
                         isUnderAttack: false,
                         isFieldToMove: false,
+                        isControversial: false,
+                        isControversialHover: false,
                     };
                 });
             });
@@ -452,6 +563,50 @@ function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
         }
     }
 
+    function handleMarkActiveContraversials(event, cellData) {
+        if (!cellData.isControversial && !cellData.isControversialHover) return;
+
+        const thisAttackObject = possibleAttacks
+            .filter((attackObj) => attackObj.isControversial)
+            .find(
+                (attackObj) =>
+                    attackObj.cellsToPassIDs.includes(cellData.id) ||
+                    attackObj.enemyIDs.includes(cellData.id)
+            );
+
+        const cellsToMarkData = [
+            ...thisAttackObject.enemyIDs,
+            ...thisAttackObject.cellsToPassIDs,
+        ].map((id) => getData(id));
+
+        if (event._reactName === "onMouseEnter") {
+            setControversialHoverCells(cellsToMarkData);
+        }
+
+        if (event._reactName === "onMouseLeave") {
+            setControversialHoverCells(cellsToMarkData, "remove active mark");
+        }
+
+        function setControversialHoverCells(cellsToMarkData, reverse = false) {
+            setCellsData((prevState) => {
+                return prevState.map((cellData) => {
+                    return cellsToMarkData?.find((cellToMoveData) => {
+                        return cellToMoveData?.id === cellData.id;
+                    })
+                        ? {
+                              ...cellData,
+                              isControversialHover: !reverse ? true : false,
+                          }
+                        : cellData;
+                });
+            });
+        }
+
+        function getData(id) {
+            return cellsData.find((cellData) => cellData.id === id);
+        }
+    }
+
     let rotateState;
 
     switch (boardSide) {
@@ -481,6 +636,9 @@ function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
                         cellData={cellData}
                         key={cellData.id}
                         onUpdateCellData={handleChangeSellsData}
+                        onMarkActiveContraversials={
+                            handleMarkActiveContraversials
+                        }
                     />
                 );
             })}
@@ -488,7 +646,7 @@ function Board({ boardSide, cellsData, setCellsData, history, setHistory }) {
     );
 }
 
-function Cell({ cellData, onUpdateCellData }) {
+function Cell({ cellData, onUpdateCellData, onMarkActiveContraversials }) {
     const isPlayerChecker =
         (isNextWhite && cellData?.checker === "white") ||
         (!isNextWhite && cellData?.checker === "black");
@@ -505,10 +663,23 @@ function Cell({ cellData, onUpdateCellData }) {
                 ${cellData.isActive ? "active" : ""}
                 ${cellData.isKing ? "king" : ""}
                 ${cellData.isUnderAttack ? "attack" : ""}
+                ${cellData.isControversial ? "controversial" : ""}
+                ${cellData.isControversialHover ? "controversial-active" : ""}
             `}
             onClick={() => onUpdateCellData(cellData)}
+            onMouseEnter={(event) =>
+                onMarkActiveContraversials(event, cellData)
+            }
+            onMouseLeave={(event) =>
+                onMarkActiveContraversials(event, cellData)
+            }
         >
-            {/* {cellData.id} */}
+            {cellData.id}
+            {/* {isDevMode ? cellData.id : null} */}
         </div>
     );
+}
+
+function createNewID() {
+    return crypto.randomUUID().slice(0, 8);
 }
