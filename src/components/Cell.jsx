@@ -1,6 +1,10 @@
-import { isNextWhite, showCellNumbers } from "../App";
-
-function Cell({ cellData, onUpdateCellData, onMarkActiveContraversials }) {
+function Cell({
+    cellData,
+    onUpdateCellData,
+    onMarkActiveContraversials,
+    isNextWhite,
+    showCellNumbers,
+}) {
     const isPlayerChecker =
         (isNextWhite && cellData?.checker === "white") ||
         (!isNextWhite && cellData?.checker === "black");

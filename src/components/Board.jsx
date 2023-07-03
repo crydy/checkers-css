@@ -1,20 +1,29 @@
 import Cell from "./Cell";
-import { isNextWhite } from "../App";
 
 export let activeCheckerID = null;
 export const possibleAttacks = [];
 
-function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
+function Board({
+    boardSide,
+    cellsData,
+    setCellsData,
+    saveInHistory,
+    isNextWhite,
+    showCellNumbers,
+}) {
     //
     //---------------------------- Main game logic -------------------------------
 
     function handleChangeSellsData(clickedCellData) {
-        if (isPlayerChecker(clickedCellData)) {
-            // initiate player move
+        const isMoveInit = isPlayerChecker(clickedCellData);
+        const isClickOnActive = activeCheckerID === clickedCellData.id;
+        const isMoveOrAttack =
+            clickedCellData.isFieldToMove && !clickedCellData.isControversial;
+        const isResolveOfControversialAttack = clickedCellData.isControversial;
 
-            clearStartMoveState();
-
-            if (activeCheckerID === clickedCellData.id) {
+        if (isMoveInit) {
+            if (isClickOnActive) {
+                clearMoveInit();
                 return;
             }
 
@@ -23,7 +32,7 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
             const cellsToMoveData = getClosestCellsData(
                 clickedCellData,
                 clickedCellData.isKing
-            ).filter((cellData) => isEmptyField(cellData));
+            ).filter((cellData) => cellData && isEmptyField(cellData));
 
             const attackableEnemiesData = [];
             let lastChainID;
@@ -105,21 +114,41 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
                 }
             }
 
-            setActiveChecker(clickedCellData);
-            setAttacableCells(attackableEnemiesData);
-            setMovableCells(cellsToMoveData);
-        } else if (
-            // move, attack, set controversial attack if needed
-            clickedCellData.isFieldToMove &&
-            !clickedCellData.isControversial
-        ) {
+            setBeforeMoveStates({
+                active: clickedCellData,
+                attackableSet: attackableEnemiesData,
+                movableSet: cellsToMoveData,
+            });
+        } else if (isMoveOrAttack) {
             const currentAttackVarians = possibleAttacks.filter(
                 (attackObj) => attackObj.moveID === clickedCellData.id
             );
+            const isControversialAttack = currentAttackVarians.length > 1;
 
-            if (currentAttackVarians.length > 1) {
+            if (!isControversialAttack) {
+                // regular move, attack move
+
+                const activeCheckerData = getData(activeCheckerID);
+                const checkersUnderAttackData =
+                    possibleAttacks
+                        .find(
+                            (attackObj) =>
+                                attackObj.moveID === clickedCellData.id
+                        )
+                        ?.enemyIDs.map((id) => getData(id)) ?? [];
+
+                setAfterMoveStates({
+                    active: activeCheckerData,
+                    dest: clickedCellData,
+                    removeSet: checkersUnderAttackData,
+                });
+
+                clearMoveInit();
+                saveInHistory(cellsData);
+            } else {
                 // set controversial attack state
-                // (if several attacks with one target cell are possible)
+                // (if several attacks with one destination cell are possible)
+
                 currentAttackVarians.forEach(
                     (attackObj) => (attackObj.isControversial = true)
                 );
@@ -131,30 +160,12 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
                 );
 
                 contrCellsData.forEach((contrIDsArray) => {
-                    setControversialCells(contrIDsArray);
+                    setControversialState(contrIDsArray);
                 });
 
                 return;
-            } else {
-                // regular move, attack move (no contraversials)
-                const activeCheckerData = getData(activeCheckerID);
-                const checkersUnderAttackIDs = possibleAttacks.find(
-                    (attackObj) => attackObj.moveID === clickedCellData.id
-                )?.enemyIDs;
-
-                moveChecker(activeCheckerData, clickedCellData);
-                setKingOnLastLine(activeCheckerData, clickedCellData);
-
-                if (checkersUnderAttackIDs)
-                    removeCheckers(
-                        checkersUnderAttackIDs.map((id) => getData(id))
-                    );
-
-                clearStartMoveState();
-                saveInHistory(cellsData);
             }
-        } else if (clickedCellData.isControversial) {
-            // attack with resolving contraversial
+        } else if (isResolveOfControversialAttack) {
             const thisAttackObj = possibleAttacks.find(
                 (attackObj) =>
                     (attackObj.isControversial &&
@@ -163,19 +174,19 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
                         attackObj.cellsToPassIDs.includes(clickedCellData.id))
             );
 
-            const thisMoveSubjects = [
-                getData(activeCheckerID),
-                getData(thisAttackObj.moveID),
-            ];
+            const activeCheckerData = getData(activeCheckerID);
+            const destCellData = getData(thisAttackObj.moveID);
 
-            moveChecker(...thisMoveSubjects);
-            setKingOnLastLine(...thisMoveSubjects);
-            removeCheckers(thisAttackObj.enemyIDs.map((id) => getData(id)));
-            clearStartMoveState();
+            setAfterMoveStates({
+                active: activeCheckerData,
+                dest: destCellData,
+                removeSet: thisAttackObj.enemyIDs.map((id) => getData(id)),
+            });
+
+            clearMoveInit();
             saveInHistory(cellsData);
         } else {
-            // cancel move
-            clearStartMoveState();
+            clearMoveInit();
         }
     }
 
@@ -286,13 +297,12 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
     }
 
     function getCellBehindData(subjectData, targetData) {
-        // const rowShift = isNextWhite ? -1 : 1;
         const rowShift = subjectData.row > targetData.row ? -1 : 1;
 
         const rowToCheck = subjectData.row + rowShift;
 
         // check field behind
-        const cellIndexToCheck =
+        const cellCulumnToCheck =
             subjectData.column > targetData.column
                 ? subjectData.column - 2
                 : subjectData.column + 2;
@@ -300,11 +310,11 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
         const isOnBoard =
             rowToCheck > 0 &&
             rowToCheck < 9 &&
-            cellIndexToCheck > 0 &&
-            cellIndexToCheck < 9;
+            cellCulumnToCheck > 0 &&
+            cellCulumnToCheck < 9;
 
         const cellBehindID = isOnBoard
-            ? `${rowToCheck + rowShift}-${cellIndexToCheck}`
+            ? `${rowToCheck + rowShift}-${cellCulumnToCheck}`
             : null;
 
         return getData(cellBehindID);
@@ -335,18 +345,68 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
         return rotateState;
     }
 
-    function setActiveChecker(targetData) {
+    function setBeforeMoveStates({ active, attackableSet, movableSet }) {
         setCellsData((prevState) => {
             return prevState.map((cellData) => {
-                return cellData.id === targetData.id
-                    ? { ...cellData, isActive: true }
-                    : { ...cellData, isActive: false };
+                const isActive = active.id === cellData.id;
+                const isMovable = movableSet.find(
+                    (movableCellData) => movableCellData.id === cellData.id
+                );
+                const isAttackable = attackableSet?.find(
+                    (attackableCellData) =>
+                        attackableCellData.id === cellData.id
+                );
+
+                if (isActive) {
+                    return { ...cellData, isActive: true };
+                } else if (isMovable) {
+                    return { ...cellData, isFieldToMove: true };
+                } else if (isAttackable) {
+                    return { ...cellData, isUnderAttack: true };
+                } else {
+                    return {
+                        ...cellData,
+                        isActive: false,
+                        isFieldToMove: false,
+                        isUnderAttack: false,
+                        isControversial: false,
+                        isControversialHover: false,
+                    };
+                }
             });
         });
     }
 
-    function setKingOnLastLine(checkerCell, targetCell) {
-        if (isLastRow(targetCell) && !checkerCell.isKing) setKing(targetCell);
+    function setAfterMoveStates({ active, dest, removeSet }) {
+        setCellsData(
+            cellsData.map((cellData) => {
+                const isTargetCell = cellData.id === dest.id;
+                const isLeavedCell = cellData.id === active.id;
+                const isEnemy = removeSet.find(
+                    (enemyCellData) => cellData.id === enemyCellData.id
+                );
+                const isKingEvent = isLastRow(dest) && !active.isKing;
+
+                if (isTargetCell) {
+                    return {
+                        ...cellData,
+                        checker: active.checker,
+                        isKing: active.isKing || isKingEvent ? true : false,
+                    };
+                } else if (isLeavedCell || isEnemy) {
+                    return { ...cellData, checker: null, isKing: false };
+                } else {
+                    return {
+                        ...cellData,
+                        isActive: false,
+                        isFieldToMove: false,
+                        isUnderAttack: false,
+                        isControversial: false,
+                        isControversialHover: false,
+                    };
+                }
+            })
+        );
 
         function isLastRow(cellData) {
             return (
@@ -354,31 +414,9 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
                 (!isNextWhite && cellData.row === 8)
             );
         }
-
-        function setKing(targetCellData) {
-            setCellsData((prevState) => {
-                return prevState.map((cellData) => {
-                    return cellData.id === targetCellData.id
-                        ? { ...cellData, isKing: true }
-                        : cellData;
-                });
-            });
-        }
     }
 
-    function setMovableCells(cellsToMoveData) {
-        setCellsData((prevState) => {
-            return prevState.map((cellData) => {
-                return cellsToMoveData?.find((cellToMoveData) => {
-                    return cellToMoveData?.id === cellData.id;
-                })
-                    ? { ...cellData, isFieldToMove: true }
-                    : { ...cellData, isFieldToMove: false };
-            });
-        });
-    }
-
-    function setControversialCells(cellsToMarkData) {
+    function setControversialState(cellsToMarkData) {
         setCellsData((prevState) => {
             return prevState.map((cellData) => {
                 return cellsToMarkData?.find((cellToMoveData) => {
@@ -390,53 +428,7 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
         });
     }
 
-    function setAttacableCells(cellsToAttackData) {
-        setCellsData((prevState) => {
-            return prevState.map((cellData) => {
-                return cellsToAttackData.find((cellToMoveData) => {
-                    return cellToMoveData.id === cellData.id;
-                })
-                    ? { ...cellData, isUnderAttack: true }
-                    : cellData;
-            });
-        });
-    }
-
-    function moveChecker(checkerCellData, targetCellData) {
-        setCellsData(
-            cellsData
-                .map((cellData) => {
-                    // place checker on new place
-                    return cellData.id === targetCellData.id
-                        ? {
-                              ...cellData,
-                              checker: isNextWhite ? "white" : "black",
-                              isKing: checkerCellData.isKing ? true : false,
-                          }
-                        : cellData;
-                })
-                .map((cellData) => {
-                    // remove checker from previous place
-                    return cellData.id === checkerCellData.id
-                        ? { ...cellData, checker: null, isKing: false }
-                        : cellData;
-                })
-        );
-    }
-
-    function removeCheckers(cellsToClearData) {
-        setCellsData((prevState) => {
-            return prevState.map((cellData) => {
-                return cellsToClearData.find((cellToClearData) => {
-                    return cellToClearData.id === cellData.id;
-                })
-                    ? { ...cellData, checker: null }
-                    : cellData;
-            });
-        });
-    }
-
-    function clearStartMoveState() {
+    function clearMoveInit() {
         activeCheckerID = null;
         clearBeforeMoveStates();
         possibleAttacks.length = 0;
@@ -465,11 +457,13 @@ function Board({ boardSide, cellsData, setCellsData, saveInHistory }) {
                 return (
                     <Cell
                         cellData={cellData}
-                        key={cellData.id}
+                        isNextWhite={isNextWhite}
                         onUpdateCellData={handleChangeSellsData}
                         onMarkActiveContraversials={
                             handleMarkActiveContraversials
                         }
+                        key={cellData.id}
+                        showCellNumbers={showCellNumbers}
                     />
                 );
             })}

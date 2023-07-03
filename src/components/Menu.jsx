@@ -1,9 +1,13 @@
+import { useState } from "react";
+
 function Menu({
     boardSide,
     onSelectBoardSide,
     history,
     onUndoLastMove,
     onGoBackInHistory,
+    isDevMode,
+    onSetDevMode,
 }) {
     return (
         <div className="menu">
@@ -17,6 +21,12 @@ function Menu({
                 <option value="black">Side: black</option>
                 <option value="90">Side: 90°</option>
             </select>
+
+            {history.length > 1 && (
+                <button className="menu-button" onClick={onUndoLastMove}>
+                    &#x21D0; Undo last move
+                </button>
+            )}
 
             {history.length > 2 && (
                 <select
@@ -46,11 +56,9 @@ function Menu({
                 </select>
             )}
 
-            {history.length > 1 && (
-                <button className="menu-button" onClick={onUndoLastMove}>
-                    &#x21D0; Undo last move
-                </button>
-            )}
+            <button className="menu-button" onClick={onSetDevMode}>
+                {isDevMode ? "Normal mode" : "Dev mode"}
+            </button>
         </div>
     );
 }

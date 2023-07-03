@@ -50,6 +50,7 @@ body {
     overflow: hidden;
     background-image: url("/wood-texture.png");
     background-size: contain;
+    background-position: center;
     filter: saturate(70%);
 }
 

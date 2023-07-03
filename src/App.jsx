@@ -4,21 +4,19 @@ import testData from "./data/testGameStates";
 import Menu from "./components/Menu";
 import Board from "./components/Board";
 
-let isDevMode;
-export let showCellNumbers;
-
-// isDevMode = true;
-// showCellNumbers = true;
-
-export let isNextWhite;
-
 export default function App() {
-    const [cellsData, setCellsData] = isDevMode
-        ? useState(testData[2])
-        : useState(createInitialData());
+    const [isDevMode, setIsDevMode] = useState(false);
+    const [cellsData, setCellsData] = useState(createInitialData());
     const [history, setHistory] = useState([cellsData]);
     const [boardSide, getBoardSideClassName] = useState("white");
-    isNextWhite = history.length % 2 === 0 ? false : true;
+
+    const isNextWhite = history.length % 2 === 0 ? false : true;
+    const showCellNumbers = isDevMode ? true : false;
+
+    function handleSetDevMode() {
+        setIsDevMode((isDev) => !isDev);
+        setCellsData(testData.at(2));
+    }
 
     function handleSelectBoardSide(value) {
         getBoardSideClassName(value);
@@ -106,6 +104,8 @@ export default function App() {
                 history={history}
                 onUndoLastMove={handleUndoLastMove}
                 onGoBackInHistory={handleGoBackInHistory}
+                isDevMode={isDevMode}
+                onSetDevMode={handleSetDevMode}
             />
             <Board
                 boardSide={boardSide}
@@ -114,6 +114,8 @@ export default function App() {
                 history={history}
                 setHistory={setHistory}
                 saveInHistory={handleSaveInHistory}
+                isNextWhite={isNextWhite}
+                showCellNumbers={showCellNumbers}
             />
         </div>
     );
