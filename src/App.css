@@ -10,21 +10,24 @@
 }
 
 :root {
-    --size-cell: min(10.5vh, 12vw);
+    --size-cell: min(11.5vh, 12vw);
 
     --size-board-border: calc(var(--size-cell) * 0.125);
     --size-board-outline: calc(var(--size-cell) * 0.05);
     --size-board-shadow: calc(var(--size-checker) * 0.5);
+
+    --size-next-player-marker: calc(var(--size-board-border) / 3);
 
     --size-checker: calc(var(--size-cell) * 0.8);
     --size-checker-core: calc(var(--size-checker) * 0.6);
     --size-checker-outline: calc(var(--size-cell) * 0.05);
     --size-checker-shadow: calc(var(--size-checker) * 0.3);
 
-    --time-transition-shadow: 0.4s;
+    --time-transition: 0.5s;
 
     --color-cell-bg-dark: rgb(124, 104, 98);
     --color-cell-bg-bright: rgb(179, 161, 161);
+    --color-cell-dev-mode-id: rgb(19, 17, 17);
 
     --color-black-body: rgb(27, 20, 20);
     --color-black-core: rgb(39, 29, 29);
@@ -43,6 +46,8 @@
     --color-board-border: rgb(105, 87, 62);
     --color-board-outline: rgb(82, 54, 54);
 
+    --color-next-player-marker: var(--color-checker-shadow-available);
+
     --color-menu-item: rgb(48, 35, 35);
 }
 
@@ -55,10 +60,9 @@ body {
 }
 
 .menu {
-    --indent: 10px;
+    --indent: 5px;
 
     z-index: 3;
-
     position: absolute;
     left: var(--indent);
     top: var(--indent);
@@ -68,19 +72,15 @@ body {
     gap: var(--indent);
 }
 
-.menu-button {
+.menu-button,
+.menu-select {
     text-align: left;
     background-color: var(--color-menu-item);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-size: 1rem;
-}
-
-.menu-select {
-    background-color: var(--color-menu-item);
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-size: 1rem;
+    outline: 0.5px solid white;
+    border-radius: 7px;
 }
 
 .board {
@@ -93,6 +93,7 @@ body {
     box-shadow: 0 0 var(--size-board-shadow) black;
 }
 
+/* wooden texture overlay */
 .board::before {
     pointer-events: none;
     z-index: 1;
@@ -109,12 +110,45 @@ body {
     background-size: contain;
 }
 
-.board-inverse {
+/* player mark bar */
+.board::after {
+    z-index: 2;
+    position: absolute;
+    content: "";
+    left: 0;
+    right: 0;
+
+    height: var(--size-next-player-marker);
+    width: 100%;
+    background-color: var(--color-next-player-marker);
+    opacity: 0.7;
+}
+
+/* player mark bar position */
+.next-white::after {
+    bottom: calc(
+        (var(--size-board-border) / 2 + var(--size-next-player-marker) / 2) * -1
+    );
+}
+
+/* player mark bar position */
+.next-black::after {
+    top: calc(
+        (var(--size-board-border) / 2 + var(--size-next-player-marker) / 2) * -1
+    );
+}
+
+.board-inverse,
+.board-inverse .cell {
     transform: rotate(180deg);
 }
 
 .board-90 {
     transform: rotate(90deg);
+}
+
+.board-90 .cell {
+    transform: rotate(270deg);
 }
 
 .cell {
@@ -125,7 +159,8 @@ body {
     height: var(--size-cell);
 
     font-size: calc(var(--size-cell) * 0.18);
-    color: rgb(46, 233, 62);
+
+    color: var(--color-cell-dev-mode-id);
     text-align: left;
     user-select: none;
     line-height: 0.7;
@@ -133,7 +168,7 @@ body {
 
 .cell::before,
 .cell::after {
-    transition: box-shadow var(--time-transition-shadow) ease;
+    transition: box-shadow var(--time-transition) ease;
 }
 
 .dark {
@@ -257,10 +292,7 @@ body {
 .controversial::before,
 .controversial::after,
 .controversial-hover::before,
-.controversial-hover::after {
-    cursor: pointer;
-}
-
+.controversial-hover::after,
 .pointer {
     cursor: pointer;
 }

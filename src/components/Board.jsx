@@ -451,7 +451,10 @@ function Board({
 
     return (
         <div
-            className={`board ${getBoardSideClassName(isNextWhite, boardSide)}`}
+            className={`board ${getBoardSideClassName(
+                isNextWhite,
+                boardSide
+            )} ${isNextWhite ? "next-white" : "next-black"}`}
         >
             {cellsData.map((cellData) => {
                 return (

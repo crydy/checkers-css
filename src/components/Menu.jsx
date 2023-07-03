@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 function Menu({
     boardSide,
     onSelectBoardSide,
@@ -18,10 +16,10 @@ function Menu({
                 value={boardSide}
                 onChange={(event) => onSelectBoardSide(event.target.value)}
             >
-                <option value="auto">Side: auto</option>
-                <option value="white">Side: white</option>
-                <option value="black">Side: black</option>
-                <option value="90">Side: 90°</option>
+                <option value="auto">Board side: auto</option>
+                <option value="white">Board side: white</option>
+                <option value="black">Board side: black</option>
+                <option value="90">Board side: 90°</option>
             </select>
 
             {history.length > 1 && (
@@ -71,7 +69,6 @@ function Menu({
                             style={{ color: "rgb(255, 113, 70)" }}
                             value={index}
                             key={index}
-                            // onClick={() => onChangeTestCase(data)}
                         >{`- case ${index + 1}`}</option>
                     ))}
                 </select>
