@@ -8,6 +8,8 @@ function Menu({
     onGoBackInHistory,
     isDevMode,
     onSetDevMode,
+    testData,
+    onChangeTestCase,
 }) {
     return (
         <div className="menu">
@@ -31,9 +33,7 @@ function Menu({
             {history.length > 2 && (
                 <select
                     className="menu-select"
-                    onChange={(event) =>
-                        onGoBackInHistory(+event.target.value + 1)
-                    }
+                    onChange={(event) => onGoBackInHistory(+event.target.value)}
                 >
                     <option value="">History:</option>
                     {history
@@ -57,8 +57,25 @@ function Menu({
             )}
 
             <button className="menu-button" onClick={onSetDevMode}>
-                {isDevMode ? "Normal mode" : "Dev mode"}
+                {isDevMode ? "👈 Normal game" : "🛠 Dev mode"}
             </button>
+
+            {isDevMode && (
+                <select
+                    className="menu-select"
+                    onChange={(event) => onChangeTestCase(event.target.value)}
+                >
+                    <option value="">Test Case:</option>
+                    {testData.map((data, index) => (
+                        <option
+                            style={{ color: "rgb(255, 113, 70)" }}
+                            value={index}
+                            key={index}
+                            // onClick={() => onChangeTestCase(data)}
+                        >{`- case ${index + 1}`}</option>
+                    ))}
+                </select>
+            )}
         </div>
     );
 }

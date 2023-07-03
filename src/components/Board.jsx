@@ -7,9 +7,9 @@ function Board({
     boardSide,
     cellsData,
     setCellsData,
-    saveInHistory,
     isNextWhite,
     showCellNumbers,
+    updateHistoryWithNextChanging,
 }) {
     //
     //---------------------------- Main game logic -------------------------------
@@ -137,6 +137,7 @@ function Board({
                         )
                         ?.enemyIDs.map((id) => getData(id)) ?? [];
 
+                updateHistoryWithNextChanging();
                 setAfterMoveStates({
                     active: activeCheckerData,
                     dest: clickedCellData,
@@ -144,7 +145,6 @@ function Board({
                 });
 
                 clearMoveInit();
-                saveInHistory(cellsData);
             } else {
                 // set controversial attack state
                 // (if several attacks with one destination cell are possible)
@@ -177,6 +177,7 @@ function Board({
             const activeCheckerData = getData(activeCheckerID);
             const destCellData = getData(thisAttackObj.moveID);
 
+            updateHistoryWithNextChanging();
             setAfterMoveStates({
                 active: activeCheckerData,
                 dest: destCellData,
@@ -184,7 +185,6 @@ function Board({
             });
 
             clearMoveInit();
-            saveInHistory(cellsData);
         } else {
             clearMoveInit();
         }

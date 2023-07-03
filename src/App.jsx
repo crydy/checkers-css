@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
+
 import testData from "./data/testGameStates";
 import Menu from "./components/Menu";
 import Board from "./components/Board";
+
+let historyBeforeDevMode = null;
+let useEffectToUpdateHistory = false;
 
 export default function App() {
     const [isDevMode, setIsDevMode] = useState(false);
@@ -10,45 +14,70 @@ export default function App() {
     const [history, setHistory] = useState([cellsData]);
     const [boardSide, getBoardSideClassName] = useState("white");
 
+    useEffect(() => {
+        if (useEffectToUpdateHistory) {
+            handleUpdateHistory();
+            useEffectToUpdateHistory = false;
+        }
+    }, [cellsData, useEffectToUpdateHistory]);
+
     const isNextWhite = history.length % 2 === 0 ? false : true;
     const showCellNumbers = isDevMode ? true : false;
 
+    function updateHistoryWithNextChanging() {
+        useEffectToUpdateHistory = true;
+    }
+
+    function handleUpdateHistory() {
+        setHistory((prevState) => {
+            return [
+                ...prevState,
+                cellsData.map((cellData) => {
+                    return {
+                        ...cellData,
+                        isActive: false,
+                        isFieldToMove: false,
+                        isEnemyChecker: false,
+                        isUnderAttack: false,
+                        isControversial: false,
+                        isControversialHover: false,
+                    };
+                }),
+            ];
+        });
+    }
+
+    function handleGoBackInHistory(historyIndex) {
+        setCellsData(history[historyIndex]);
+        setHistory(history.slice(0, historyIndex + 1));
+    }
+
+    function handleUndoLastMove() {
+        setCellsData(history.at(-2));
+        setHistory((prevState) => prevState.slice(0, prevState.length - 1));
+    }
+
     function handleSetDevMode() {
+        if (isDevMode && historyBeforeDevMode) {
+            setHistory(historyBeforeDevMode);
+            setCellsData(historyBeforeDevMode.at(-1));
+            historyBeforeDevMode = null;
+        }
         setIsDevMode((isDev) => !isDev);
-        setCellsData(testData.at(2));
+    }
+
+    function handleChangeTestCase(testDataIndex) {
+        const requiredState = testData.at(testDataIndex);
+
+        // need to set it only first time when test case choosen
+        if (!historyBeforeDevMode) historyBeforeDevMode = history;
+
+        setCellsData(requiredState);
+        setHistory([requiredState]);
     }
 
     function handleSelectBoardSide(value) {
         getBoardSideClassName(value);
-    }
-
-    function handleUndoLastMove() {
-        setCellsData(history.at(-1));
-        setHistory(history.slice(0, history.length - 1));
-    }
-
-    function handleSaveInHistory() {
-        setHistory((prevState) => [
-            ...prevState,
-            cellsData.map((cellData) => {
-                return {
-                    ...cellData,
-                    isActive: false,
-                    isFieldToMove: false,
-                    isEnemyChecker: false,
-                    isUnderAttack: false,
-                    isControversial: false,
-                    isControversialHover: false,
-                };
-            }),
-        ]);
-    }
-
-    function handleGoBackInHistory(historyIndex) {
-        if (!historyIndex) return;
-
-        setCellsData(history[historyIndex]);
-        setHistory(history.slice(0, historyIndex));
     }
 
     function createInitialData() {
@@ -106,6 +135,8 @@ export default function App() {
                 onGoBackInHistory={handleGoBackInHistory}
                 isDevMode={isDevMode}
                 onSetDevMode={handleSetDevMode}
+                testData={testData}
+                onChangeTestCase={handleChangeTestCase}
             />
             <Board
                 boardSide={boardSide}
@@ -113,9 +144,10 @@ export default function App() {
                 setCellsData={setCellsData}
                 history={history}
                 setHistory={setHistory}
-                saveInHistory={handleSaveInHistory}
+                saveInHistory={handleUpdateHistory}
                 isNextWhite={isNextWhite}
                 showCellNumbers={showCellNumbers}
+                updateHistoryWithNextChanging={updateHistoryWithNextChanging}
             />
         </div>
     );

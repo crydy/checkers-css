@@ -21,7 +21,7 @@
     --size-checker-outline: calc(var(--size-cell) * 0.05);
     --size-checker-shadow: calc(var(--size-checker) * 0.3);
 
-    --time-transition-shadow: 0.2s;
+    --time-transition-shadow: 0.4s;
 
     --color-cell-bg-dark: rgb(124, 104, 98);
     --color-cell-bg-bright: rgb(179, 161, 161);
