@@ -4,6 +4,7 @@ import "./App.css";
 import testData from "./data/testGameStates";
 import Menu from "./components/Menu";
 import Board from "./components/Board";
+import { useKeydown } from "./hooks/useKeydown";
 
 let historyBeforeDevMode = null;
 let useEffectToUpdateHistory = false;
@@ -13,7 +14,9 @@ export default function App() {
     const [boardSide, getBoardSideClassName] = useState("white");
     const [cellsData, setCellsData] = useState(createInitialData());
     const [history, setHistory] = useState([cellsData]);
-    const [isNextPlayerMarked, setIsNextPlayerMarked] = useState(false);
+    const [isNextPlayerMarked, setIsNextPlayerMarked] = useState(true);
+
+    useKeydown(["Backspace", "Escape"], handleUndoLastMove);
 
     useEffect(() => {
         if (useEffectToUpdateHistory) {
@@ -58,8 +61,9 @@ export default function App() {
     }
 
     function handleUndoLastMove() {
-        setCellsData(history.at(-2));
-        setHistory((prevState) => prevState.slice(0, prevState.length - 1));
+        if (history.length - 1) {
+            handleGoBackInHistory(history.length - 2);
+        }
     }
 
     function handleSetDevMode() {
