@@ -64,12 +64,67 @@ body {
 
     z-index: 3;
     position: absolute;
+
     left: var(--indent);
     top: var(--indent);
 
     display: flex;
     flex-direction: column;
     gap: var(--indent);
+}
+
+.menu-burger {
+    --bar-width: 30px;
+    --bar-height: 4px;
+
+    width: fit-content;
+    cursor: pointer;
+    padding: 12px 0;
+}
+
+.menu-burger span {
+    position: relative;
+    display: block;
+    width: var(--bar-width);
+    height: var(--bar-height);
+    background: #ffffff;
+    /* transition: all 0.2s ease-in-out; */
+}
+
+.menu-burger span:before,
+.menu-burger span:after {
+    position: absolute;
+    background: #ffffff;
+    content: "";
+    left: 0;
+    width: var(--bar-width);
+    height: var(--bar-height);
+    /* transition: all 0.2s ease-in-out; */
+}
+
+.menu-burger span:before {
+    top: -8px;
+}
+
+.menu-burger span:after {
+    top: 8px;
+}
+
+.menu-burger.open span {
+    background: transparent;
+}
+
+.menu-burger.open span:before {
+    transform: rotate(45deg) translate(5px, 6px);
+}
+
+.menu-burger.open span:after {
+    transform: rotate(-45deg) translate(5px, -6px);
+}
+
+.menu-items {
+    display: flex;
+    flex-direction: column;
 }
 
 .menu-button,
