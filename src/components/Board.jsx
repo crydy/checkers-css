@@ -4,6 +4,7 @@ export let activeCheckerID = null;
 export const possibleAttacks = [];
 
 function Board({
+    isNextPlayerMarked,
     boardSide,
     cellsData,
     setCellsData,
@@ -454,7 +455,13 @@ function Board({
             className={`board ${getBoardSideClassName(
                 isNextWhite,
                 boardSide
-            )} ${isNextWhite ? "next-white" : "next-black"}`}
+            )} ${
+                isNextPlayerMarked
+                    ? isNextWhite
+                        ? "next-white"
+                        : "next-black"
+                    : ""
+            }`}
         >
             {cellsData.map((cellData) => {
                 return (

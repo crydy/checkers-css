@@ -10,19 +10,24 @@ let useEffectToUpdateHistory = false;
 
 export default function App() {
     const [isDevMode, setIsDevMode] = useState(false);
+    const [boardSide, getBoardSideClassName] = useState("white");
     const [cellsData, setCellsData] = useState(createInitialData());
     const [history, setHistory] = useState([cellsData]);
-    const [boardSide, getBoardSideClassName] = useState("white");
+    const [isNextPlayerMarked, setIsNextPlayerMarked] = useState(false);
 
     useEffect(() => {
         if (useEffectToUpdateHistory) {
             handleUpdateHistory();
             useEffectToUpdateHistory = false;
         }
-    }, [cellsData, useEffectToUpdateHistory]);
+    }, [cellsData, useEffectToUpdateHistory, handleUpdateHistory]);
 
     const isNextWhite = history.length % 2 === 0 ? false : true;
     const showCellNumbers = isDevMode ? true : false;
+
+    function handleMarkNextPlayer() {
+        setIsNextPlayerMarked((isMarked) => !isMarked);
+    }
 
     function updateHistoryWithNextChanging() {
         useEffectToUpdateHistory = true;
@@ -128,6 +133,8 @@ export default function App() {
     return (
         <div>
             <Menu
+                isNextPlayerMarked={isNextPlayerMarked}
+                onMarkNextPlayer={handleMarkNextPlayer}
                 boardSide={boardSide}
                 onSelectBoardSide={handleSelectBoardSide}
                 history={history}
@@ -139,6 +146,7 @@ export default function App() {
                 onChangeTestCase={handleChangeTestCase}
             />
             <Board
+                isNextPlayerMarked={isNextPlayerMarked}
                 boardSide={boardSide}
                 cellsData={cellsData}
                 setCellsData={setCellsData}

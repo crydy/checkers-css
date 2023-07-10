@@ -111,7 +111,8 @@ body {
 }
 
 /* player mark bar */
-.board::after {
+.next-white::after,
+.next-black::after {
     z-index: 2;
     position: absolute;
     content: "";
@@ -168,7 +169,13 @@ body {
 
 .cell::before,
 .cell::after {
-    transition: box-shadow var(--time-transition) ease;
+    z-index: 2;
+    position: absolute;
+    content: "";
+    border-radius: 50%;
+    transition: box-shadow var(--time-transition) ease,
+        opacity var(--time-transition) ease;
+    opacity: 0;
 }
 
 .dark {
@@ -185,6 +192,7 @@ body {
     position: absolute;
     content: "";
     border-radius: 50%;
+    opacity: 1;
 }
 
 .checker::after {
@@ -261,6 +269,7 @@ body {
 }
 
 .field-to-move::before {
+    opacity: 1;
     position: absolute;
     content: "";
     border-radius: 50%;

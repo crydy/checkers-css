@@ -1,4 +1,6 @@
 function Menu({
+    isNextPlayerMarked,
+    onMarkNextPlayer,
     boardSide,
     onSelectBoardSide,
     history,
@@ -11,6 +13,12 @@ function Menu({
 }) {
     return (
         <div className="menu">
+            <button className="menu-button" onClick={onMarkNextPlayer}>
+                {isNextPlayerMarked
+                    ? "Not mark next player"
+                    : "Mark next player"}
+            </button>
+
             <select
                 className="menu-select"
                 value={boardSide}
@@ -55,7 +63,7 @@ function Menu({
             )}
 
             <button className="menu-button" onClick={onSetDevMode}>
-                {isDevMode ? "👈 Normal game" : "🛠 Dev mode"}
+                {isDevMode ? "👈 Quit dev move" : "🛠 Dev mode"}
             </button>
 
             {isDevMode && (
