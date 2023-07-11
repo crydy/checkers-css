@@ -23,6 +23,8 @@
     --size-checker-outline: calc(var(--size-cell) * 0.05);
     --size-checker-shadow: calc(var(--size-checker) * 0.3);
 
+    --size-indent-removed-checkers-from-board: var(--size-board-border);
+
     --time-transition: 0.5s;
 
     --color-cell-bg-dark: rgb(124, 104, 98);
@@ -138,7 +140,71 @@ body {
     border-radius: 7px;
 }
 
+.game-field {
+    --indent-calculated: calc(
+        (var(--size-cell) + var(--size-indent-removed-checkers-from-board)) * -1
+    );
+
+    display: flex;
+    flex-direction: row;
+    gap: var(--size-indent-removed-checkers-from-board);
+
+    position: relative;
+}
+
+.game-field.reverse,
+.game-field.reverse .board .cell {
+    transform: rotate(180deg);
+}
+
+.deleted-section {
+    position: absolute;
+}
+
+.deleted-section.normal {
+    order: 3;
+    right: var(--indent-calculated);
+}
+
+.deleted-section.reverse {
+    transform: rotate(180deg);
+    order: 1;
+
+    left: var(--indent-calculated);
+    bottom: 0;
+}
+
+/* Vertical screen view */
+@media (max-aspect-ratio: 1/1) {
+    .game-field {
+        flex-direction: column;
+    }
+
+    .deleted-section {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .deleted-section.normal {
+        right: auto;
+        left: auto;
+        top: var(--indent-calculated);
+    }
+
+    .deleted-section.reverse {
+        right: 0;
+        bottom: var(--indent-calculated);
+    }
+
+    .cell.out-of-game {
+        margin-bottom: 0;
+        max-width: calc(var(--size-cell) * 0.4);
+    }
+}
+
 .board {
+    order: 2;
+
     position: relative;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -194,19 +260,6 @@ body {
     );
 }
 
-.board-inverse,
-.board-inverse .cell {
-    transform: rotate(180deg);
-}
-
-.board-90 {
-    transform: rotate(90deg);
-}
-
-.board-90 .cell {
-    transform: rotate(270deg);
-}
-
 .cell {
     position: relative;
     background-color: var(--color-cell-bg-dark);
@@ -222,6 +275,10 @@ body {
     line-height: 0.7;
 }
 
+.cell.out-of-game {
+    margin-bottom: -60%;
+}
+
 .cell::before,
 .cell::after {
     z-index: 2;
@@ -233,12 +290,17 @@ body {
     opacity: 0;
 }
 
+/* cell colors */
 .dark {
     background-color: var(--color-cell-bg-dark);
 }
 
 .light {
     background-color: var(--color-cell-bg-bright);
+}
+
+.trans {
+    background-color: transparent;
 }
 
 .checker::before,

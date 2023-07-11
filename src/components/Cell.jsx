@@ -23,7 +23,7 @@ function Cell({
                 ${cellData.isUnderAttack ? "under-attack" : ""}
                 ${cellData.isControversial ? "controversial" : ""}
                 ${cellData.isControversialHover ? "controversial-hover" : ""}
-            `}
+            `.replace(/\s+/g, " ")}
             onClick={() => onUpdateCellData(cellData)}
             onMouseEnter={(event) =>
                 onMarkActiveContraversials(event, cellData)

@@ -5,7 +5,6 @@ export const possibleAttacks = [];
 
 function Board({
     isNextPlayerMarked,
-    boardSide,
     cellsData,
     setCellsData,
     isNextWhite,
@@ -321,31 +320,6 @@ function Board({
         return getData(cellBehindID);
     }
 
-    function getBoardSideClassName(isNextWhite, boardSide) {
-        let rotateState;
-
-        switch (boardSide) {
-            case "auto":
-                rotateState =
-                    isNextWhite && boardSide === "auto" ? "" : "board-inverse";
-                break;
-
-            case "white":
-                rotateState = "";
-                break;
-
-            case "black":
-                rotateState = "board-inverse";
-                break;
-
-            case "90":
-                rotateState = "board-90";
-                break;
-        }
-
-        return rotateState;
-    }
-
     function setBeforeMoveStates({ active, attackableSet, movableSet }) {
         setCellsData((prevState) => {
             return prevState.map((cellData) => {
@@ -452,10 +426,7 @@ function Board({
 
     return (
         <div
-            className={`board ${getBoardSideClassName(
-                isNextWhite,
-                boardSide
-            )} ${
+            className={`board  ${
                 isNextPlayerMarked
                     ? isNextWhite
                         ? "next-white"

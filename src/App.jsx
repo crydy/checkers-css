@@ -1,22 +1,35 @@
 import { useState, useEffect } from "react";
+import { useKeydown } from "./hooks/useKeydown";
 import "./App.css";
 
 import testData from "./data/testGameStates";
 import Menu from "./components/Menu";
 import Board from "./components/Board";
-import { useKeydown } from "./hooks/useKeydown";
 
 let historyBeforeDevMode = null;
 let useEffectToUpdateHistory = false;
 
 export default function App() {
     const [isDevMode, setIsDevMode] = useState(false);
-    const [boardSide, getBoardSideClassName] = useState("white");
+    const [boardSide, setBoardSide] = useState("white");
     const [cellsData, setCellsData] = useState(createInitialData());
     const [history, setHistory] = useState([cellsData]);
     const [isNextPlayerMarked, setIsNextPlayerMarked] = useState(true);
+    const [deletedCheckers, setDeletedCheckers] = useState([0, 0]);
 
-    useKeydown(["Backspace", "Escape"], handleUndoLastMove);
+    useKeydown(["Backspace", "Delete"], handleUndoLastMove);
+
+    useEffect(() => {
+        setDeletedCheckers([
+            12 -
+                cellsData.filter((cellData) => cellData.checker === "white")
+                    .length,
+            12 -
+                cellsData.filter((cellData) => cellData.checker === "black")
+                    .length,
+        ]);
+        console.log();
+    }, [cellsData, setDeletedCheckers]);
 
     useEffect(() => {
         if (useEffectToUpdateHistory) {
@@ -86,7 +99,7 @@ export default function App() {
     }
 
     function handleSelectBoardSide(value) {
-        getBoardSideClassName(value);
+        setBoardSide(value);
     }
 
     function createInitialData() {
@@ -135,7 +148,7 @@ export default function App() {
     }
 
     return (
-        <div>
+        <div className="app">
             <Menu
                 isNextPlayerMarked={isNextPlayerMarked}
                 onMarkNextPlayer={handleMarkNextPlayer}
@@ -149,18 +162,70 @@ export default function App() {
                 testData={testData}
                 onChangeTestCase={handleChangeTestCase}
             />
-            <Board
-                isNextPlayerMarked={isNextPlayerMarked}
-                boardSide={boardSide}
-                cellsData={cellsData}
-                setCellsData={setCellsData}
-                history={history}
-                setHistory={setHistory}
-                saveInHistory={handleUpdateHistory}
-                isNextWhite={isNextWhite}
-                showCellNumbers={showCellNumbers}
-                updateHistoryWithNextChanging={updateHistoryWithNextChanging}
-            />
+
+            <div
+                className={`game-field ${getBoardSideClassName(
+                    isNextWhite,
+                    boardSide
+                )}`}
+            >
+                <Board
+                    isNextPlayerMarked={isNextPlayerMarked}
+                    boardSide={boardSide}
+                    cellsData={cellsData}
+                    setCellsData={setCellsData}
+                    history={history}
+                    setHistory={setHistory}
+                    saveInHistory={handleUpdateHistory}
+                    isNextWhite={isNextWhite}
+                    showCellNumbers={showCellNumbers}
+                    updateHistoryWithNextChanging={
+                        updateHistoryWithNextChanging
+                    }
+                />
+                <DeletedCheckers color="black" amount={deletedCheckers[1]} />
+                <DeletedCheckers color="white" amount={deletedCheckers[0]} />
+            </div>
         </div>
     );
+}
+
+function DeletedCheckers({ color, amount }) {
+    return (
+        <div
+            className={`deleted-section ${
+                color === "black" ? "reverse" : "normal"
+            }`}
+        >
+            {Array.from({ length: amount }).map((_, index) => {
+                return (
+                    <div
+                        className={`cell out-of-game trans ${color} checker`}
+                        key={index}
+                    ></div>
+                );
+            })}
+        </div>
+    );
+}
+
+function getBoardSideClassName(isNextWhite, boardSide) {
+    let rotateState;
+
+    switch (boardSide) {
+        case "auto":
+            rotateState =
+                isNextWhite && boardSide === "auto" ? "normal" : "reverse";
+            break;
+
+        case "white":
+            rotateState = "normal";
+            break;
+
+        case "black":
+            rotateState = "reverse";
+            break;
+    }
+
+    return rotateState;
 }

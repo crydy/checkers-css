@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useKeydown } from "../hooks/useKeydown";
 
 function Menu({
     isNextPlayerMarked,
@@ -14,6 +15,7 @@ function Menu({
     onChangeTestCase,
 }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    useKeydown(["Enter", "Escape"], handleOpenMenu);
 
     function handleOpenMenu() {
         setIsMenuOpen((currentState) => !currentState);
@@ -42,7 +44,6 @@ function Menu({
                             <option value="auto">Board side: auto</option>
                             <option value="white">Board side: white</option>
                             <option value="black">Board side: black</option>
-                            <option value="90">Board side: 90°</option>
                         </select>
 
                         <button
