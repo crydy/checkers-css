@@ -1,7 +1,5 @@
 import Cell from "./Cell";
-
-export let activeCheckerID = null;
-export const possibleAttacks = [];
+import { useRef } from "react";
 
 function Board({
     isNextPlayerMarked,
@@ -11,12 +9,14 @@ function Board({
     showCellNumbers,
     updateHistoryWithNextChanging,
 }) {
-    //
     //---------------------------- Main game logic -------------------------------
+
+    const activeCheckerID = useRef(null);
+    const possibleAttacks = useRef([]);
 
     function handleChangeSellsData(clickedCellData) {
         const isMoveInit = isPlayerChecker(clickedCellData);
-        const isClickOnActive = activeCheckerID === clickedCellData.id;
+        const isClickOnActive = activeCheckerID.current === clickedCellData.id;
         const isMoveOrAttack =
             clickedCellData.isFieldToMove && !clickedCellData.isControversial;
         const isResolveOfControversialAttack = clickedCellData.isControversial;
@@ -27,7 +27,7 @@ function Board({
                 return;
             }
 
-            activeCheckerID = clickedCellData.id;
+            activeCheckerID.current = clickedCellData.id;
 
             const cellsToMoveData = getClosestCellsData(
                 clickedCellData,
@@ -43,7 +43,7 @@ function Board({
             setAttacks(clickedCellData);
 
             function setAttacks(startCellData) {
-                const previousLevelAttack = possibleAttacks.find(
+                const previousLevelAttack = possibleAttacks.current.find(
                     (attackObj) =>
                         attackObj.moveID === startCellData.id &&
                         attackObj.chainID === lastChainID
@@ -77,7 +77,7 @@ function Board({
                                 lastChainID = newChainID;
 
                                 // first level attack object
-                                possibleAttacks.push({
+                                possibleAttacks.current.push({
                                     chainID: newChainID,
                                     moveID: cellBehindEnemyData.id,
                                     enemyIDs: [enemyData.id],
@@ -89,7 +89,7 @@ function Board({
 
                                 // next level attack object
                                 // gather all previous cells to pass and enemies to attack
-                                possibleAttacks.push({
+                                possibleAttacks.current.push({
                                     chainID: previousLevelAttack.chainID,
                                     moveID: cellBehindEnemyData.id,
                                     enemyIDs: [
@@ -120,7 +120,7 @@ function Board({
                 movableSet: cellsToMoveData,
             });
         } else if (isMoveOrAttack) {
-            const currentAttackVarians = possibleAttacks.filter(
+            const currentAttackVarians = possibleAttacks.current.filter(
                 (attackObj) => attackObj.moveID === clickedCellData.id
             );
             const isControversialAttack = currentAttackVarians.length > 1;
@@ -128,9 +128,9 @@ function Board({
             if (!isControversialAttack) {
                 // regular move, attack move
 
-                const activeCheckerData = getData(activeCheckerID);
+                const activeCheckerData = getData(activeCheckerID.current);
                 const checkersUnderAttackData =
-                    possibleAttacks
+                    possibleAttacks.current
                         .find(
                             (attackObj) =>
                                 attackObj.moveID === clickedCellData.id
@@ -166,7 +166,7 @@ function Board({
                 return;
             }
         } else if (isResolveOfControversialAttack) {
-            const thisAttackObj = possibleAttacks.find(
+            const thisAttackObj = possibleAttacks.current.find(
                 (attackObj) =>
                     (attackObj.isControversial &&
                         attackObj.enemyIDs.includes(clickedCellData.id)) ||
@@ -174,7 +174,7 @@ function Board({
                         attackObj.cellsToPassIDs.includes(clickedCellData.id))
             );
 
-            const activeCheckerData = getData(activeCheckerID);
+            const activeCheckerData = getData(activeCheckerID.current);
             const destCellData = getData(thisAttackObj.moveID);
 
             updateHistoryWithNextChanging();
@@ -193,7 +193,7 @@ function Board({
     function handleMarkActiveContraversials(event, cellData) {
         if (!cellData.isControversial && !cellData.isControversialHover) return;
 
-        const thisAttackObject = possibleAttacks
+        const thisAttackObject = possibleAttacks.current
             .filter((attackObj) => attackObj.isControversial)
             .find(
                 (attackObj) =>
@@ -404,9 +404,9 @@ function Board({
     }
 
     function clearMoveInit() {
-        activeCheckerID = null;
+        activeCheckerID.current = null;
         clearBeforeMoveStates();
-        possibleAttacks.length = 0;
+        possibleAttacks.current.length = 0;
     }
 
     function clearBeforeMoveStates() {
@@ -427,11 +427,7 @@ function Board({
     return (
         <div
             className={`board  ${
-                isNextPlayerMarked
-                    ? isNextWhite
-                        ? "next-white"
-                        : "next-black"
-                    : ""
+                isNextPlayerMarked && isNextWhite ? "next-white" : "next-black"
             }`}
         >
             {cellsData.map((cellData) => {
@@ -443,8 +439,8 @@ function Board({
                         onMarkActiveContraversials={
                             handleMarkActiveContraversials
                         }
-                        key={cellData.id}
                         showCellNumbers={showCellNumbers}
+                        key={cellData.id}
                     />
                 );
             })}

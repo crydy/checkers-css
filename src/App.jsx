@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useKeydown } from "./hooks/useKeydown";
 import "./App.css";
 
@@ -6,16 +6,18 @@ import testData from "./data/testGameStates";
 import Menu from "./components/Menu";
 import Board from "./components/Board";
 
-let historyBeforeDevMode = null;
-let useEffectToUpdateHistory = false;
-
 export default function App() {
     const [isDevMode, setIsDevMode] = useState(false);
-    const [boardSide, setBoardSide] = useState("white");
+
     const [cellsData, setCellsData] = useState(createInitialData());
     const [history, setHistory] = useState([cellsData]);
+
     const [isNextPlayerMarked, setIsNextPlayerMarked] = useState(true);
+    const [boardSide, setBoardSide] = useState("white");
     const [deletedCheckers, setDeletedCheckers] = useState([0, 0]);
+
+    const historyBeforeDevMode = useRef(null);
+    const updateHistory = useRef(false);
 
     useKeydown(["Backspace", "Delete"], handleUndoLastMove);
 
@@ -32,11 +34,11 @@ export default function App() {
     }, [cellsData, setDeletedCheckers]);
 
     useEffect(() => {
-        if (useEffectToUpdateHistory) {
+        if (updateHistory.current) {
             handleUpdateHistory();
-            useEffectToUpdateHistory = false;
+            updateHistory.current = false;
         }
-    }, [cellsData, useEffectToUpdateHistory, handleUpdateHistory]);
+    }, [cellsData, updateHistory.current, handleUpdateHistory]);
 
     const isNextWhite = history.length % 2 === 0 ? false : true;
     const showCellNumbers = isDevMode ? true : false;
@@ -46,7 +48,7 @@ export default function App() {
     }
 
     function updateHistoryWithNextChanging() {
-        useEffectToUpdateHistory = true;
+        updateHistory.current = true;
     }
 
     function handleUpdateHistory() {
@@ -80,10 +82,10 @@ export default function App() {
     }
 
     function handleSetDevMode() {
-        if (isDevMode && historyBeforeDevMode) {
-            setHistory(historyBeforeDevMode);
-            setCellsData(historyBeforeDevMode.at(-1));
-            historyBeforeDevMode = null;
+        if (isDevMode && historyBeforeDevMode.current) {
+            setHistory(historyBeforeDevMode.current);
+            setCellsData(historyBeforeDevMode.current.at(-1));
+            historyBeforeDevMode.current = null;
         }
         setIsDevMode((isDev) => !isDev);
     }
@@ -92,7 +94,8 @@ export default function App() {
         const requiredState = testData.at(testDataIndex);
 
         // need to set it only first time when test case choosen
-        if (!historyBeforeDevMode) historyBeforeDevMode = history;
+        if (!historyBeforeDevMode.current)
+            historyBeforeDevMode.current = history;
 
         setCellsData(requiredState);
         setHistory([requiredState]);
@@ -171,12 +174,8 @@ export default function App() {
             >
                 <Board
                     isNextPlayerMarked={isNextPlayerMarked}
-                    boardSide={boardSide}
                     cellsData={cellsData}
                     setCellsData={setCellsData}
-                    history={history}
-                    setHistory={setHistory}
-                    saveInHistory={handleUpdateHistory}
                     isNextWhite={isNextWhite}
                     showCellNumbers={showCellNumbers}
                     updateHistoryWithNextChanging={

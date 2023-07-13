@@ -1,8 +1,8 @@
 function Cell({
     cellData,
+    isNextWhite,
     onUpdateCellData,
     onMarkActiveContraversials,
-    isNextWhite,
     showCellNumbers,
 }) {
     const isPlayerChecker =
@@ -12,18 +12,18 @@ function Cell({
 
     return (
         <div
-            className={`cell
+            className={removeRedundantSpaces(`cell
                 ${cellData.bg}
-                ${cellData.checker ? `checker ${cellData.checker}` : ""}
+                ${cellData.checker && `checker ${cellData.checker}`}
                 ${isMovalbe && "movable"}
                 ${cellData.checker && isPlayerChecker && "pointer"}
-                ${cellData.isFieldToMove ? "field-to-move" : ""}
-                ${cellData.isActive ? "active" : ""}
-                ${cellData.isKing ? "king" : ""}
-                ${cellData.isUnderAttack ? "under-attack" : ""}
-                ${cellData.isControversial ? "controversial" : ""}
-                ${cellData.isControversialHover ? "controversial-hover" : ""}
-            `.replace(/\s+/g, " ")}
+                ${cellData.isFieldToMove && "field-to-move"}
+                ${cellData.isActive && "active"}
+                ${cellData.isKing && "king"}
+                ${cellData.isUnderAttack && "under-attack"}
+                ${cellData.isControversial && "controversial"}
+                ${cellData.isControversialHover && "controversial-hover"}
+            `)}
             onClick={() => onUpdateCellData(cellData)}
             onMouseEnter={(event) =>
                 onMarkActiveContraversials(event, cellData)
@@ -38,3 +38,7 @@ function Cell({
 }
 
 export default Cell;
+
+function removeRedundantSpaces(string) {
+    return string.replace(/\s+/g, " ");
+}
