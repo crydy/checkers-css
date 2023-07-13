@@ -107,7 +107,7 @@ function Board({
                             attackableEnemiesData.push(enemyData);
 
                             // repeat recursively for every next empty cell
-                            // behind every enemy checker which under attack
+                            // behind every enemy checker which is under attack
                             setAttacks(cellBehindEnemyData);
                         }
                     });
@@ -427,7 +427,11 @@ function Board({
     return (
         <div
             className={`board  ${
-                isNextPlayerMarked && isNextWhite ? "next-white" : "next-black"
+                isNextPlayerMarked
+                    ? isNextWhite
+                        ? "next-white"
+                        : "next-black"
+                    : ""
             }`}
         >
             {cellsData.map((cellData) => {
