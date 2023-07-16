@@ -1,7 +1,12 @@
+import testData from "../data/testGameStates";
+
 export function reducer(state, action) {
     const isNextWhite = state.history.length % 2 === 0 ? false : true;
 
     switch (action.type) {
+        case "startGame":
+            return { ...state, isGameMode: true };
+
         case "toggleMenu":
             return { ...state, isMenuOpened: !state.isMenuOpened };
 

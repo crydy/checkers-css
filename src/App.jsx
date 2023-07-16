@@ -7,10 +7,12 @@ import testData from "./data/testGameStates";
 
 import Menu from "./components/Menu";
 import Board from "./components/Board";
+import StartScreen from "./StartScreen";
 
 const initCellsData = createInitialData();
 
 const initState = {
+    isGameMode: false,
     isMenuOpened: false,
     isDevMode: false,
     isNextPlayerMarked: true,
@@ -22,6 +24,7 @@ const initState = {
 export default function App() {
     const [
         {
+            isGameMode,
             isMenuOpened,
             isDevMode,
             isNextPlayerMarked,
@@ -51,6 +54,8 @@ export default function App() {
 
     const isNextWhite = history.length % 2 === 0 ? false : true;
     const showCellNumbers = isDevMode ? true : false;
+
+    if (!isGameMode) return <StartScreen dispatch={dispatch} />;
 
     return (
         <div className="app">

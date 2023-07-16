@@ -88,7 +88,7 @@ function Menu({
                                         >
                                             {index === 0
                                                 ? "-- Start game --"
-                                                : `- go to move ${index + 1}`}
+                                                : `- back to move ${index + 1}`}
                                         </option>
                                     ))}
                             </select>
