@@ -3,11 +3,10 @@ import { useRef } from "react";
 
 function Board({
     isNextPlayerMarked,
-    cellsData,
-    setCellsData,
     isNextWhite,
+    cellsData,
     showCellNumbers,
-    updateHistoryWithNextChanging,
+    dispatch,
 }) {
     //---------------------------- Main game logic -------------------------------
 
@@ -114,10 +113,13 @@ function Board({
                 }
             }
 
-            setBeforeMoveStates({
-                active: clickedCellData,
-                attackableSet: attackableEnemiesData,
-                movableSet: cellsToMoveData,
+            dispatch({
+                type: "setBeforeMove",
+                payload: {
+                    active: clickedCellData,
+                    attackableSet: attackableEnemiesData,
+                    movableSet: cellsToMoveData,
+                },
             });
         } else if (isMoveOrAttack) {
             const currentAttackVarians = possibleAttacks.current.filter(
@@ -137,11 +139,13 @@ function Board({
                         )
                         ?.enemyIDs.map((id) => getData(id)) ?? [];
 
-                updateHistoryWithNextChanging();
-                setAfterMoveStates({
-                    active: activeCheckerData,
-                    dest: clickedCellData,
-                    removeSet: checkersUnderAttackData,
+                dispatch({
+                    type: "setAfterMove",
+                    payload: {
+                        active: activeCheckerData,
+                        dest: clickedCellData,
+                        removeSet: checkersUnderAttackData,
+                    },
                 });
 
                 clearMoveInit();
@@ -153,16 +157,18 @@ function Board({
                     (attackObj) => (attackObj.isControversial = true)
                 );
 
-                const contrCellsData = currentAttackVarians.map((attackObj) =>
-                    [...attackObj.enemyIDs, ...attackObj.cellsToPassIDs].map(
-                        (id) => getData(id)
+                const contrCellsData = currentAttackVarians
+                    .map((attackObj) =>
+                        [
+                            ...attackObj.enemyIDs,
+                            ...attackObj.cellsToPassIDs,
+                        ].map((id) => getData(id))
                     )
-                );
+                    .reduce((prev, current) => {
+                        return [...prev, ...current];
+                    }, []);
 
-                contrCellsData.forEach((contrIDsArray) => {
-                    setControversialState(contrIDsArray);
-                });
-
+                dispatch({ type: "setControversial", payload: contrCellsData });
                 return;
             }
         } else if (isResolveOfControversialAttack) {
@@ -177,11 +183,13 @@ function Board({
             const activeCheckerData = getData(activeCheckerID.current);
             const destCellData = getData(thisAttackObj.moveID);
 
-            updateHistoryWithNextChanging();
-            setAfterMoveStates({
-                active: activeCheckerData,
-                dest: destCellData,
-                removeSet: thisAttackObj.enemyIDs.map((id) => getData(id)),
+            dispatch({
+                type: "setAfterMove",
+                payload: {
+                    active: activeCheckerData,
+                    dest: destCellData,
+                    removeSet: thisAttackObj.enemyIDs.map((id) => getData(id)),
+                },
             });
 
             clearMoveInit();
@@ -207,25 +215,16 @@ function Board({
         ].map((id) => getData(id));
 
         if (event._reactName === "onMouseEnter") {
-            setControversialHoverCells(cellsToMarkData);
+            dispatch({
+                type: "setContraversialHover",
+                payload: cellsToMarkData,
+            });
         }
 
         if (event._reactName === "onMouseLeave") {
-            setControversialHoverCells(cellsToMarkData, "remove active mark");
-        }
-
-        function setControversialHoverCells(cellsToMarkData, reverse = false) {
-            setCellsData((prevState) => {
-                return prevState.map((cellData) => {
-                    return cellsToMarkData?.find((cellToMoveData) => {
-                        return cellToMoveData?.id === cellData.id;
-                    })
-                        ? {
-                              ...cellData,
-                              isControversialHover: !reverse ? true : false,
-                          }
-                        : cellData;
-                });
+            dispatch({
+                type: "removeContraversialHover",
+                payload: cellsToMarkData,
             });
         }
 
@@ -320,108 +319,10 @@ function Board({
         return getData(cellBehindID);
     }
 
-    function setBeforeMoveStates({ active, attackableSet, movableSet }) {
-        setCellsData((prevState) => {
-            return prevState.map((cellData) => {
-                const isActive = active.id === cellData.id;
-                const isMovable = movableSet.find(
-                    (movableCellData) => movableCellData.id === cellData.id
-                );
-                const isAttackable = attackableSet?.find(
-                    (attackableCellData) =>
-                        attackableCellData.id === cellData.id
-                );
-
-                if (isActive) {
-                    return { ...cellData, isActive: true };
-                } else if (isMovable) {
-                    return { ...cellData, isFieldToMove: true };
-                } else if (isAttackable) {
-                    return { ...cellData, isUnderAttack: true };
-                } else {
-                    return {
-                        ...cellData,
-                        isActive: false,
-                        isFieldToMove: false,
-                        isUnderAttack: false,
-                        isControversial: false,
-                        isControversialHover: false,
-                    };
-                }
-            });
-        });
-    }
-
-    function setAfterMoveStates({ active, dest, removeSet }) {
-        setCellsData(
-            cellsData.map((cellData) => {
-                const isTargetCell = cellData.id === dest.id;
-                const isLeavedCell = cellData.id === active.id;
-                const isEnemy = removeSet.find(
-                    (enemyCellData) => cellData.id === enemyCellData.id
-                );
-                const isKingEvent = isLastRow(dest) && !active.isKing;
-
-                if (isTargetCell) {
-                    return {
-                        ...cellData,
-                        checker: active.checker,
-                        isKing: active.isKing || isKingEvent ? true : false,
-                    };
-                } else if (isLeavedCell || isEnemy) {
-                    return { ...cellData, checker: null, isKing: false };
-                } else {
-                    return {
-                        ...cellData,
-                        isActive: false,
-                        isFieldToMove: false,
-                        isUnderAttack: false,
-                        isControversial: false,
-                        isControversialHover: false,
-                    };
-                }
-            })
-        );
-
-        function isLastRow(cellData) {
-            return (
-                (isNextWhite && cellData.row === 1) ||
-                (!isNextWhite && cellData.row === 8)
-            );
-        }
-    }
-
-    function setControversialState(cellsToMarkData) {
-        setCellsData((prevState) => {
-            return prevState.map((cellData) => {
-                return cellsToMarkData?.find((cellToMoveData) => {
-                    return cellToMoveData?.id === cellData.id;
-                })
-                    ? { ...cellData, isControversial: true }
-                    : cellData;
-            });
-        });
-    }
-
     function clearMoveInit() {
         activeCheckerID.current = null;
-        clearBeforeMoveStates();
+        dispatch({ type: "clearBeforeMove" });
         possibleAttacks.current.length = 0;
-    }
-
-    function clearBeforeMoveStates() {
-        setCellsData((prevState) => {
-            return prevState.map((cellData) => {
-                return {
-                    ...cellData,
-                    isActive: false,
-                    isUnderAttack: false,
-                    isFieldToMove: false,
-                    isControversial: false,
-                    isControversialHover: false,
-                };
-            });
-        });
     }
 
     return (

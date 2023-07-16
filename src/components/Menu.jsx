@@ -1,44 +1,37 @@
-import { useState } from "react";
 import { useKeydown } from "../hooks/useKeydown";
 
 function Menu({
+    isMenuOpened,
     isNextPlayerMarked,
-    onMarkNextPlayer,
     boardSide,
-    onSelectBoardSide,
     history,
-    onUndoLastMove,
-    onGoBackInHistory,
     isDevMode,
-    onSetDevMode,
-    testData,
-    onChangeTestCase,
+    dispatch,
+    testCasesAmount,
 }) {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    useKeydown(["Enter", "Escape"], handleOpenMenu);
-
-    function handleOpenMenu() {
-        setIsMenuOpen((currentState) => !currentState);
-    }
+    useKeydown(["Enter", "Escape"], () => dispatch({ type: "toggleMenu" }));
 
     return (
         <>
             <div className="menu">
                 <a
                     href="#"
-                    className={`menu-burger ${isMenuOpen && "open"}`}
-                    onClick={handleOpenMenu}
+                    className={`menu-burger ${isMenuOpened && "open"}`}
+                    onClick={() => dispatch({ type: "toggleMenu" })}
                 >
                     <span></span>
                 </a>
 
-                {isMenuOpen && (
+                {isMenuOpened && (
                     <div className="menu-items">
                         <select
                             className="menu-select"
                             value={boardSide}
-                            onChange={(event) =>
-                                onSelectBoardSide(event.target.value)
+                            onChange={(e) =>
+                                dispatch({
+                                    type: "selectBoardSide",
+                                    payload: e.target.value,
+                                })
                             }
                         >
                             <option value="auto">Board side: auto</option>
@@ -48,7 +41,9 @@ function Menu({
 
                         <button
                             className="menu-button"
-                            onClick={onMarkNextPlayer}
+                            onClick={() =>
+                                dispatch({ type: "toggleNextPlayerMark" })
+                            }
                         >
                             {isNextPlayerMarked
                                 ? "🚩Not mark next player"
@@ -58,7 +53,9 @@ function Menu({
                         {history.length > 1 && (
                             <button
                                 className="menu-button"
-                                onClick={onUndoLastMove}
+                                onClick={() =>
+                                    dispatch({ type: "undoLastMove" })
+                                }
                             >
                                 &#x21D0; Undo last move
                             </button>
@@ -67,8 +64,11 @@ function Menu({
                         {history.length > 2 && (
                             <select
                                 className="menu-select"
-                                onChange={(event) =>
-                                    onGoBackInHistory(+event.target.value)
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "goBackInHistory",
+                                        payload: +e.target.value,
+                                    })
                                 }
                             >
                                 <option value="">History:</option>
@@ -94,25 +94,35 @@ function Menu({
                             </select>
                         )}
 
-                        <button className="menu-button" onClick={onSetDevMode}>
+                        <button
+                            className="menu-button"
+                            onClick={() => dispatch({ type: "toggleDevMode" })}
+                        >
                             {isDevMode ? "👈 Quit dev move" : "🛠 Dev mode"}
                         </button>
 
                         {isDevMode && (
                             <select
                                 className="menu-select"
-                                onChange={(event) =>
-                                    onChangeTestCase(event.target.value)
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "setTestCase",
+                                        payload: +e.target.value,
+                                    })
                                 }
                             >
                                 <option value="">🔥 Test Case:</option>
-                                {testData.map((data, index) => (
-                                    <option
-                                        style={{ color: "rgb(255, 113, 70)" }}
-                                        value={index}
-                                        key={index}
-                                    >{`- case ${index + 1}`}</option>
-                                ))}
+                                {Array.from({ length: testCasesAmount }).map(
+                                    (_, index) => (
+                                        <option
+                                            style={{
+                                                color: "rgb(255, 113, 70)",
+                                            }}
+                                            value={index}
+                                            key={index}
+                                        >{`- case ${index + 1}`}</option>
+                                    )
+                                )}
                             </select>
                         )}
                     </div>
