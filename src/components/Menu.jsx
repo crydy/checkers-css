@@ -14,14 +14,17 @@ function Menu({
     return (
         <>
             <div className="menu">
+                {/* Burger */}
                 <a
                     href="#"
                     className={`menu-burger ${isMenuOpened && "open"}`}
                     onClick={() => dispatch({ type: "toggleMenu" })}
+                    title={!isMenuOpened && "Open menu (Esc)"}
                 >
                     <span></span>
                 </a>
 
+                {/* Main manu */}
                 {isMenuOpened && (
                     <div className="menu-items">
                         <select
@@ -111,7 +114,7 @@ function Menu({
                                     })
                                 }
                             >
-                                <option value="">🔥 Test Case:</option>
+                                <option value="">🔥 Choose test Case:</option>
                                 {Array.from({ length: testCasesAmount }).map(
                                     (_, index) => (
                                         <option
@@ -128,6 +131,17 @@ function Menu({
                     </div>
                 )}
             </div>
+
+            {/* Outside main menu */}
+            {!isMenuOpened && history.length > 1 && (
+                <button
+                    className="menu-button menu-button--outside"
+                    onClick={() => dispatch({ type: "undoLastMove" })}
+                    title="Undo last move (Backspace)"
+                >
+                    {"<"}
+                </button>
+            )}
         </>
     );
 }
