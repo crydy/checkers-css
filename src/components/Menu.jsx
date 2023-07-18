@@ -14,7 +14,7 @@ function Menu({
     return (
         <>
             <div className="menu menu--main">
-                {/* Burger */}
+                {/* Burger button */}
                 <a
                     href="#"
                     className={`menu-burger ${isMenuOpened ? "open" : ""}`}
@@ -74,7 +74,7 @@ function Menu({
                                     })
                                 }
                             >
-                                <option value="">History:</option>
+                                <option value="">⏱ History:</option>
                                 {history
                                     .filter((_, index) => index !== 0)
                                     .map((_, index) => (

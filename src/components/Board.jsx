@@ -114,7 +114,7 @@ function Board({
             }
 
             dispatch({
-                type: "setBeforeMove",
+                type: "initMove",
                 payload: {
                     active: clickedCellData,
                     attackableSet: attackableEnemiesData,
@@ -140,7 +140,7 @@ function Board({
                         ?.enemyIDs.map((id) => getData(id)) ?? [];
 
                 dispatch({
-                    type: "setAfterMove",
+                    type: "resolveMove",
                     payload: {
                         active: activeCheckerData,
                         dest: clickedCellData,
@@ -184,7 +184,7 @@ function Board({
             const destCellData = getData(thisAttackObj.moveID);
 
             dispatch({
-                type: "setAfterMove",
+                type: "resolveMove",
                 payload: {
                     active: activeCheckerData,
                     dest: destCellData,
@@ -226,10 +226,6 @@ function Board({
                 type: "removeContraversialHover",
                 payload: cellsToMarkData,
             });
-        }
-
-        function getData(id) {
-            return cellsData.find((cellData) => cellData.id === id);
         }
     }
 
@@ -321,8 +317,8 @@ function Board({
 
     function clearMoveInit() {
         activeCheckerID.current = null;
-        dispatch({ type: "clearBeforeMove" });
         possibleAttacks.current.length = 0;
+        dispatch({ type: "clearInitMove" });
     }
 
     return (

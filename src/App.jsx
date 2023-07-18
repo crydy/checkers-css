@@ -15,6 +15,8 @@ import DeletedCheckers from "./components/DeletedCheckers";
 // Styles
 import "./App.css";
 
+const CHECKERS_SUM_TO_START_CHECK_STUCK_CHECKERS = 5;
+
 export default function App() {
     const [
         {
@@ -31,6 +33,8 @@ export default function App() {
     ] = useReducer(reducer, initState);
 
     const [deletedCheckers, setDeletedCheckers] = useState([0, 0]);
+
+    const isNextWhite = history.length % 2 === 0 ? false : true;
 
     useKeydown(["Backspace", "Delete"], () =>
         dispatch({ type: "undoLastMove" })
@@ -50,10 +54,21 @@ export default function App() {
             let winner = restOfWhites ? "white" : "black";
             dispatch({ type: "finishGame", payload: winner });
         }
-    }, [cellsData, setDeletedCheckers]);
 
-    const isNextWhite = history.length % 2 === 0 ? false : true;
-    const showCellNumbers = isDevMode ? true : false;
+        const currentPlayerCheckers = cellsData.filter(
+            (cellData) => cellData.checker === (isNextWhite ? "white" : "black")
+        );
+
+        if (
+            CHECKERS_SUM_TO_START_CHECK_STUCK_CHECKERS >=
+            currentPlayerCheckers.length
+        ) {
+            // todo: look over current player checkers to find
+            // at least one possible move
+            // and stop the game if not found
+            console.log(currentPlayerCheckers);
+        }
+    }, [cellsData, setDeletedCheckers]);
 
     if (!isGameMode && !winner) return <StartScreen dispatch={dispatch} />;
 
@@ -85,7 +100,7 @@ export default function App() {
                         isNextPlayerMarked={isNextPlayerMarked}
                         isNextWhite={isNextWhite}
                         cellsData={cellsData}
-                        showCellNumbers={showCellNumbers}
+                        showCellNumbers={isDevMode}
                         dispatch={dispatch}
                     />
                     <DeletedCheckers

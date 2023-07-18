@@ -20,7 +20,7 @@ export function reducer(state, action) {
         case "toggleNextPlayerMark":
             return { ...state, isNextPlayerMarked: !state.isNextPlayerMarked };
 
-        case "setBeforeMove": {
+        case "initMove": {
             const { active, attackableSet, movableSet } = action.payload;
 
             return {
@@ -55,7 +55,7 @@ export function reducer(state, action) {
             };
         }
 
-        case "clearBeforeMove":
+        case "clearInitMove":
             return {
                 ...state,
                 cellsData: state.cellsData.map((cellData) => {
@@ -70,7 +70,7 @@ export function reducer(state, action) {
                 }),
             };
 
-        case "setAfterMove": {
+        case "resolveMove": {
             const { active, dest, removeSet } = action.payload;
 
             const newCellsData = state.cellsData.map((cellData) => {
@@ -175,6 +175,8 @@ export function reducer(state, action) {
         }
 
         case "undoLastMove":
+            if (state.history.length <= 1) return state;
+
             return {
                 ...state,
                 winner: null,
