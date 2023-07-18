@@ -1,11 +1,15 @@
 import testData from "../data/testGameStates";
+import initState from "../data/initState";
 
 export function reducer(state, action) {
     const isNextWhite = state.history.length % 2 === 0 ? false : true;
 
     switch (action.type) {
         case "startGame":
-            return { ...state, isGameMode: true };
+            return { ...initState, isGameMode: true };
+
+        case "finishGame":
+            return { ...state, winner: action.payload, isGameMode: false };
 
         case "toggleMenu":
             return { ...state, isMenuOpened: !state.isMenuOpened };
@@ -173,6 +177,9 @@ export function reducer(state, action) {
         case "undoLastMove":
             return {
                 ...state,
+                winner: null,
+                isGameMode: true,
+                isMenuOpened: false,
                 cellsData: state.history[state.history.length - 2],
                 history: state.history.slice(0, state.history.length - 1),
             };

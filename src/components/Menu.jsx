@@ -13,13 +13,13 @@ function Menu({
 
     return (
         <>
-            <div className="menu">
+            <div className="menu menu--main">
                 {/* Burger */}
                 <a
                     href="#"
-                    className={`menu-burger ${isMenuOpened && "open"}`}
+                    className={`menu-burger ${isMenuOpened ? "open" : ""}`}
                     onClick={() => dispatch({ type: "toggleMenu" })}
-                    title={!isMenuOpened && "Open menu (Esc)"}
+                    title={!isMenuOpened ? "Open menu (Esc)" : ""}
                 >
                     <span></span>
                 </a>
