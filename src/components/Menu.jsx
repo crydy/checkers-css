@@ -1,13 +1,13 @@
 import { useKeydown } from "../hooks/useKeydown";
 
 function Menu({
+    isDevMode,
     isMenuOpened,
     isNextPlayerMarked,
     boardSide,
     history,
-    isDevMode,
     dispatch,
-    testCasesAmount,
+    testCases,
 }) {
     useKeydown(["Enter", "Escape"], () => dispatch({ type: "toggleMenu" }));
 
@@ -42,6 +42,7 @@ function Menu({
                             <option value="black">Board side: black</option>
                         </select>
 
+                        {/* Next player mark */}
                         <button
                             className="menu-button"
                             onClick={() =>
@@ -53,6 +54,7 @@ function Menu({
                                 : "🚩Mark next player"}
                         </button>
 
+                        {/* Undo last move */}
                         {history.length > 1 && (
                             <button
                                 className="menu-button"
@@ -64,6 +66,7 @@ function Menu({
                             </button>
                         )}
 
+                        {/* History */}
                         {history.length > 2 && (
                             <select
                                 className="menu-select"
@@ -97,6 +100,7 @@ function Menu({
                             </select>
                         )}
 
+                        {/* Dev mode activation */}
                         <button
                             className="menu-button"
                             onClick={() => dispatch({ type: "toggleDevMode" })}
@@ -104,28 +108,27 @@ function Menu({
                             {isDevMode ? "👈 Quit dev move" : "🛠 Dev mode"}
                         </button>
 
+                        {/* Select test case */}
                         {isDevMode && (
                             <select
                                 className="menu-select"
                                 onChange={(e) =>
                                     dispatch({
                                         type: "setTestCase",
-                                        payload: +e.target.value,
+                                        payload: e.target.value,
                                     })
                                 }
                             >
                                 <option value="">🔥 Choose test Case:</option>
-                                {Array.from({ length: testCasesAmount }).map(
-                                    (_, index) => (
-                                        <option
-                                            style={{
-                                                color: "rgb(255, 113, 70)",
-                                            }}
-                                            value={index}
-                                            key={index}
-                                        >{`- case ${index + 1}`}</option>
-                                    )
-                                )}
+                                {testCases.map((caseName, index) => (
+                                    <option
+                                        style={{
+                                            color: "rgb(255, 113, 70)",
+                                        }}
+                                        value={caseName}
+                                        key={index}
+                                    >{`- ${index + 1}: ${caseName}`}</option>
+                                ))}
                             </select>
                         )}
                     </div>

@@ -85,7 +85,7 @@ export default function App() {
                         isNextPlayerMarked={isNextPlayerMarked}
                         boardSide={boardSide}
                         history={history}
-                        testCasesAmount={testData.length}
+                        testCases={Object.keys(testData)}
                         dispatch={dispatch}
                     />
                 )}

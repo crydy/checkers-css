@@ -210,8 +210,10 @@ export function reducer(state, action) {
             }
 
         case "setTestCase": {
-            const index = action.payload;
-            const targetData = testData.at(index);
+            if (action.payload === "") return state;
+
+            const caseName = action.payload;
+            const targetData = testData[caseName];
 
             return {
                 ...state,
