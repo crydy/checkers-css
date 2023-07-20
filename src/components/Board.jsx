@@ -1,5 +1,13 @@
-import Cell from "./Cell";
 import { useRef } from "react";
+import Cell from "./Cell";
+import {
+    isPlayerChecker,
+    isEnemyChecker,
+    isEmptyField,
+    getClosestCellsData,
+    getCellBehindData,
+    createNewID,
+} from "../functions/functions";
 
 function Board({
     isNextPlayerMarked,
@@ -14,7 +22,7 @@ function Board({
     const possibleAttacks = useRef([]);
 
     function handleChangeSellsData(clickedCellData) {
-        const isMoveInit = isPlayerChecker(clickedCellData);
+        const isMoveInit = isPlayerChecker(clickedCellData, isNextWhite);
         const isClickOnActive = activeCheckerID.current === clickedCellData.id;
         const isMoveOrAttack =
             clickedCellData.isFieldToMove && !clickedCellData.isControversial;
@@ -30,15 +38,17 @@ function Board({
 
             const cellsToMoveData = getClosestCellsData(
                 clickedCellData,
-                clickedCellData.isKing
+                cellsData,
+                clickedCellData.isKing,
+                isNextWhite
             ).filter((cellData) => cellData && isEmptyField(cellData));
 
             const attackableEnemiesData = [];
             let lastChainID;
 
             // gather all possible attacks and related moves
-            // function works recursively and call itself
-            // for every next empty cell behind enemy checker
+            // (function works recursively and call itself
+            // for every next empty cell behind enemy checker)
             setAttacks(clickedCellData);
 
             function setAttacks(startCellData) {
@@ -50,14 +60,17 @@ function Board({
 
                 const enemiesNearbyData = getClosestCellsData(
                     startCellData,
-                    clickedCellData.isKing
-                ).filter((cellData) => isEnemyChecker(cellData));
+                    cellsData,
+                    clickedCellData.isKing,
+                    isNextWhite
+                ).filter((cellData) => isEnemyChecker(cellData, isNextWhite));
 
                 if (enemiesNearbyData.length > 0) {
                     enemiesNearbyData.forEach((enemyData) => {
                         const cellBehindEnemyData = getCellBehindData(
                             startCellData,
-                            enemyData
+                            enemyData,
+                            cellsData
                         );
 
                         const isCellBehindEnemyEmpty =
@@ -125,11 +138,9 @@ function Board({
             const currentAttackVarians = possibleAttacks.current.filter(
                 (attackObj) => attackObj.moveID === clickedCellData.id
             );
-            const isControversialAttack = currentAttackVarians.length > 1;
+            const isOnlyMovePossible = !(currentAttackVarians.length > 1);
 
-            if (!isControversialAttack) {
-                // regular move, attack move
-
+            if (isOnlyMovePossible) {
                 const activeCheckerData = getData(activeCheckerID.current);
                 const checkersUnderAttackData =
                     possibleAttacks.current
@@ -157,7 +168,7 @@ function Board({
                     (attackObj) => (attackObj.isControversial = true)
                 );
 
-                const contrCellsData = currentAttackVarians
+                const cellsToHoverData = currentAttackVarians
                     .map((attackObj) =>
                         [
                             ...attackObj.enemyIDs,
@@ -168,7 +179,11 @@ function Board({
                         return [...prev, ...current];
                     }, []);
 
-                dispatch({ type: "setControversial", payload: contrCellsData });
+                dispatch({
+                    type: "setControversial",
+                    payload: cellsToHoverData,
+                });
+
                 return;
             }
         } else if (isResolveOfControversialAttack) {
@@ -229,98 +244,6 @@ function Board({
         }
     }
 
-    // ---------------------------------------------------------------------------
-
-    function isPlayerChecker(cellData) {
-        return (
-            (isNextWhite && cellData?.checker === "white") ||
-            (!isNextWhite && cellData?.checker === "black")
-        );
-    }
-
-    function isEnemyChecker(cellData) {
-        return (
-            (isNextWhite && cellData?.checker === "black") ||
-            (!isNextWhite && cellData?.checker === "white")
-        );
-    }
-
-    function isEmptyField(cellData) {
-        return !cellData?.checker;
-    }
-
-    function createNewID() {
-        return (Date.now() + Math.random()).toString();
-    }
-
-    function getData(id) {
-        return cellsData.find((cellData) => cellData.id === id);
-    }
-
-    function getClosestCellsData(cellData, isKingMode = false) {
-        const id = cellData.id;
-
-        let possibleMoveCells = [];
-
-        const rowShift = isNextWhite ? -1 : 1;
-
-        // check cell on forward-left
-        if (id[2] !== "1")
-            possibleMoveCells.push(
-                getData(`${+id[0] + rowShift}-${+id[2] - 1}`)
-            );
-        // check cell on forward-right
-        if (id[2] !== "8")
-            possibleMoveCells.push(
-                getData(`${+id[0] + rowShift}-${+id[2] + 1}`)
-            );
-
-        if (isKingMode) {
-            // check cell on back-left
-            if (id[2] !== "1")
-                possibleMoveCells.push(
-                    getData(`${+id[0] - rowShift}-${+id[2] - 1}`)
-                );
-            // check cell on back-right
-            if (id[2] !== "8")
-                possibleMoveCells.push(
-                    getData(`${+id[0] - rowShift}-${+id[2] + 1}`)
-                );
-        }
-
-        return possibleMoveCells;
-    }
-
-    function getCellBehindData(subjectData, targetData) {
-        const rowShift = subjectData.row > targetData.row ? -1 : 1;
-
-        const rowToCheck = subjectData.row + rowShift;
-
-        // check field behind
-        const cellCulumnToCheck =
-            subjectData.column > targetData.column
-                ? subjectData.column - 2
-                : subjectData.column + 2;
-
-        const isOnBoard =
-            rowToCheck > 0 &&
-            rowToCheck < 9 &&
-            cellCulumnToCheck > 0 &&
-            cellCulumnToCheck < 9;
-
-        const cellBehindID = isOnBoard
-            ? `${rowToCheck + rowShift}-${cellCulumnToCheck}`
-            : null;
-
-        return getData(cellBehindID);
-    }
-
-    function clearMoveInit() {
-        activeCheckerID.current = null;
-        possibleAttacks.current.length = 0;
-        dispatch({ type: "clearInitMove" });
-    }
-
     return (
         <div
             className={`board  ${
@@ -347,6 +270,16 @@ function Board({
             })}
         </div>
     );
+
+    function getData(id) {
+        return cellsData.find((cellData) => cellData.id === id);
+    }
+
+    function clearMoveInit() {
+        activeCheckerID.current = null;
+        possibleAttacks.current.length = 0;
+        dispatch({ type: "clearInitMove" });
+    }
 }
 
 export default Board;

@@ -1,6 +1,8 @@
 import { createInitialData } from "../functions/createInitialData";
+import testData from "./testGameStates";
 
 const initCellsData = createInitialData();
+// const initCellsData = testData["stucked checker (after attack from 5-8)"];
 
 const initState = {
     isGameMode: false,

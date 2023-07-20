@@ -14,8 +14,9 @@ import Board from "./components/Board";
 import DeletedCheckers from "./components/DeletedCheckers";
 // Styles
 import "./App.css";
+import { isPlayerHasMoves } from "./functions/functions";
 
-const CHECKERS_SUM_TO_START_CHECK_STUCK_CHECKERS = 5;
+const CHECKERS_AMOUNT_TO_START_CHECK_STUCK_CHECKERS = 5;
 
 export default function App() {
     const [
@@ -33,7 +34,6 @@ export default function App() {
     ] = useReducer(reducer, initState);
 
     const [deletedCheckers, setDeletedCheckers] = useState([0, 0]);
-
     const isNextWhite = history.length % 2 === 0 ? false : true;
 
     useKeydown(["Backspace", "Delete"], () =>
@@ -48,25 +48,31 @@ export default function App() {
             (cellData) => cellData.checker === "black"
         ).length;
 
+        // display out-of-board checkers
         setDeletedCheckers([12 - restOfWhites, 12 - restofBlacks]);
 
+        // Check winner
         if (!restOfWhites || !restofBlacks) {
             let winner = restOfWhites ? "white" : "black";
             dispatch({ type: "finishGame", payload: winner });
         }
 
+        // Check winner with stuck checkers
         const currentPlayerCheckers = cellsData.filter(
             (cellData) => cellData.checker === (isNextWhite ? "white" : "black")
         );
 
         if (
-            CHECKERS_SUM_TO_START_CHECK_STUCK_CHECKERS >=
+            CHECKERS_AMOUNT_TO_START_CHECK_STUCK_CHECKERS >=
             currentPlayerCheckers.length
         ) {
-            // todo: look over current player checkers to find
-            // at least one possible move
-            // and stop the game if not found
-            console.log(currentPlayerCheckers);
+            if (
+                !isPlayerHasMoves(currentPlayerCheckers, cellsData, isNextWhite)
+            )
+                dispatch({
+                    type: "finishGame",
+                    payload: isNextWhite ? "black" : "white",
+                });
         }
     }, [cellsData, setDeletedCheckers]);
 

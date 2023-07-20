@@ -90,6 +90,8 @@ body {
 }
 
 .end-screen-title {
+    font-size: min(9vw, 4.2rem);
+    white-space: nowrap;
     margin: 0;
 }
 

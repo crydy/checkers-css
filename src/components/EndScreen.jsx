@@ -1,5 +1,3 @@
-import Cell from "./Cell";
-
 export default function EndScreen({ winner, dispatch }) {
     // undo last move
     const color = winner === "white" ? "white" : "black";
