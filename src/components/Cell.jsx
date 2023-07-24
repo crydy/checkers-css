@@ -1,10 +1,8 @@
-function Cell({
-    cellData,
-    isNextWhite,
-    onUpdateCellData,
-    onMarkActiveContraversials,
-    showCellNumbers,
-}) {
+import { useGameContext } from "../context/GameContext";
+import { removeRedundantSpaces } from "../functions/functions";
+
+function Cell({ cellData, onUpdateCellData, onMarkActiveContraversials }) {
+    const { isNextWhite, isDevMode } = useGameContext();
     const isPlayerChecker =
         (isNextWhite && cellData?.checker === "white") ||
         (!isNextWhite && cellData?.checker === "black");
@@ -32,13 +30,9 @@ function Cell({
                 onMarkActiveContraversials(event, cellData)
             }
         >
-            {showCellNumbers ? cellData.id : null}
+            {isDevMode ? cellData.id : null}
         </div>
     );
 }
 
 export default Cell;
-
-function removeRedundantSpaces(string) {
-    return string.replace(/\s+/g, " ");
-}

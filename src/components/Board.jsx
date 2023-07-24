@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import Cell from "./Cell";
+import { useGameContext } from "../context/GameContext";
 import {
     isPlayerChecker,
     isEnemyChecker,
@@ -7,16 +7,14 @@ import {
     getClosestCellsData,
     getCellBehindData,
     createNewID,
+    removeRedundantSpaces,
 } from "../functions/functions";
+import Cell from "./Cell";
 
-function Board({
-    isNextPlayerMarked,
-    isNextWhite,
-    cellsData,
-    showCellNumbers,
-    dispatch,
-}) {
+function Board() {
     //---------------------------- Main game logic -------------------------------
+    const { isNextWhite, isNextPlayerMarked, cellsData, dispatch } =
+        useGameContext();
 
     const activeCheckerID = useRef(null);
     const possibleAttacks = useRef([]);
@@ -246,24 +244,24 @@ function Board({
 
     return (
         <div
-            className={`board  ${
-                isNextPlayerMarked
-                    ? isNextWhite
-                        ? "next-white"
-                        : "next-black"
-                    : ""
-            }`}
+            className={removeRedundantSpaces(
+                `board ${
+                    isNextPlayerMarked
+                        ? isNextWhite
+                            ? "next-white"
+                            : "next-black"
+                        : ""
+                }`
+            )}
         >
             {cellsData.map((cellData) => {
                 return (
                     <Cell
                         cellData={cellData}
-                        isNextWhite={isNextWhite}
                         onUpdateCellData={handleChangeSellsData}
                         onMarkActiveContraversials={
                             handleMarkActiveContraversials
                         }
-                        showCellNumbers={showCellNumbers}
                         key={cellData.id}
                     />
                 );

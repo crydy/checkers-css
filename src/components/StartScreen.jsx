@@ -1,4 +1,8 @@
-export default function StartScreen({ dispatch }) {
+import { useGameContext } from "../context/GameContext";
+
+export default function StartScreen() {
+    const { dispatch } = useGameContext();
+
     return (
         <>
             <h1>American checkers</h1>

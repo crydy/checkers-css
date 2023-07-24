@@ -1,14 +1,17 @@
+import { useGameContext } from "../context/GameContext";
+import testData from "../data/testGameStates";
 import { useKeydown } from "../hooks/useKeydown";
 
-function Menu({
-    isDevMode,
-    isMenuOpened,
-    isNextPlayerMarked,
-    boardSide,
-    history,
-    dispatch,
-    testCases,
-}) {
+function Menu() {
+    const {
+        isDevMode,
+        isMenuOpened,
+        isNextPlayerMarked,
+        boardSide,
+        history,
+        dispatch,
+    } = useGameContext();
+
     useKeydown(["Enter", "Escape"], () => dispatch({ type: "toggleMenu" }));
 
     return (
@@ -120,15 +123,19 @@ function Menu({
                                 }
                             >
                                 <option value="">🔥 Choose test Case:</option>
-                                {testCases.map((caseName, index) => (
-                                    <option
-                                        style={{
-                                            color: "rgb(255, 113, 70)",
-                                        }}
-                                        value={caseName}
-                                        key={index}
-                                    >{`- ${index + 1}: ${caseName}`}</option>
-                                ))}
+                                {Object.keys(testData).map(
+                                    (caseName, index) => (
+                                        <option
+                                            style={{
+                                                color: "rgb(255, 113, 70)",
+                                            }}
+                                            value={caseName}
+                                            key={index}
+                                        >{`- ${
+                                            index + 1
+                                        }: ${caseName}`}</option>
+                                    )
+                                )}
                             </select>
                         )}
                     </div>

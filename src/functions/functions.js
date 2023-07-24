@@ -116,6 +116,31 @@ export function getCellBehindData(subjectData, targetData, allCellsData) {
     return allCellsData.find((cellData) => cellData.id === cellBehindID);
 }
 
+export function getBoardSideClassName(isNextWhite, boardSide) {
+    let rotateState;
+
+    switch (boardSide) {
+        case "auto":
+            rotateState =
+                isNextWhite && boardSide === "auto" ? "normal" : "reverse";
+            break;
+
+        case "white":
+            rotateState = "normal";
+            break;
+
+        case "black":
+            rotateState = "reverse";
+            break;
+    }
+
+    return rotateState;
+}
+
 export function createNewID() {
     return (Date.now() + Math.random()).toString();
+}
+
+export function removeRedundantSpaces(string) {
+    return string.replace(/\s+/g, " ");
 }
