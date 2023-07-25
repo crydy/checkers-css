@@ -1,8 +1,14 @@
 import { useGameContext } from "../context/GameContext";
 import { removeRedundantSpaces } from "../functions/functions";
 
-function Cell({ cellData, onUpdateCellData, onMarkActiveContraversials }) {
-    const { isNextWhite, isDevMode } = useGameContext();
+function Cell({ cellData }) {
+    const {
+        isNextWhite,
+        isDevMode,
+        handleChangeSellsData,
+        handleMarkActiveContraversials,
+    } = useGameContext();
+
     const isPlayerChecker =
         (isNextWhite && cellData?.checker === "white") ||
         (!isNextWhite && cellData?.checker === "black");
@@ -22,12 +28,12 @@ function Cell({ cellData, onUpdateCellData, onMarkActiveContraversials }) {
                 ${cellData.isControversial && "controversial"}
                 ${cellData.isControversialHover && "controversial-hover"}
             `)}
-            onClick={() => onUpdateCellData(cellData)}
+            onClick={() => handleChangeSellsData(cellData)}
             onMouseEnter={(event) =>
-                onMarkActiveContraversials(event, cellData)
+                handleMarkActiveContraversials(event, cellData)
             }
             onMouseLeave={(event) =>
-                onMarkActiveContraversials(event, cellData)
+                handleMarkActiveContraversials(event, cellData)
             }
         >
             {isDevMode ? cellData.id : null}
