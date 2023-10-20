@@ -10,6 +10,7 @@ const initState = {
     winner: null,
     cellsData: initCellsData,
     history: [initCellsData],
+    historyBeforeDevMode: null,
     boardSide: "white",
 };
 

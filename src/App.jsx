@@ -5,7 +5,7 @@ import { getBoardSideClassName } from "./functions/functions";
 // Components
 import StartScreen from "./components/StartScreen";
 import EndScreen from "./components/EndScreen";
-import Menu from "./components/Menu";
+import MainMenu from "./components/MainMenu";
 import Board from "./components/Board";
 import DeletedCheckers from "./components/DeletedCheckers";
 // Styles
@@ -21,7 +21,7 @@ export default function App() {
         <>
             {!isGameMode && winner && <EndScreen />}
             <div className="app">
-                {!winner && <Menu />}
+                {!winner && <MainMenu />}
 
                 <div
                     className={`game-field ${getBoardSideClassName(

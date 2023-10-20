@@ -27,13 +27,13 @@ function GameStateProvider({ children }) {
     const [
         {
             isGameMode,
-            isMenuOpened,
             isDevMode,
             isNextPlayerMarked,
             winner,
             boardSide,
             cellsData,
             history,
+            historyBeforeDevMode,
         },
         dispatch,
     ] = useReducer(reducer, initState);
@@ -321,13 +321,13 @@ function GameStateProvider({ children }) {
             value={{
                 isNextWhite,
                 isGameMode,
-                isMenuOpened,
                 isDevMode,
                 isNextPlayerMarked,
                 winner,
                 boardSide,
                 cellsData,
                 history,
+                historyBeforeDevMode,
                 deletedCheckers,
                 dispatch,
                 handleChangeSellsData,
