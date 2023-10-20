@@ -1,9 +1,8 @@
 import { useGameContext } from "../context/GameContext";
 
-export default function EndScreen() {
+function EndScreen() {
     const { winner, dispatch } = useGameContext();
 
-    // undo last move
     const color = winner === "white" ? "white" : "black";
 
     return (
@@ -29,3 +28,5 @@ export default function EndScreen() {
         </div>
     );
 }
+
+export default EndScreen;

@@ -7320,4 +7320,4 @@ const testData = {
     ],
 };
 
-export default testData;
+export {testData};

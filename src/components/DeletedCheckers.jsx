@@ -1,4 +1,4 @@
-export default function DeletedCheckers({ color, amount }) {
+function DeletedCheckers({ color, amount }) {
     return (
         <div
             className={`deleted-section ${
@@ -16,3 +16,5 @@ export default function DeletedCheckers({ color, amount }) {
         </div>
     );
 }
+
+export default DeletedCheckers;

@@ -1,5 +1,6 @@
 import { useGameContext } from "../context/GameContext";
 import { removeRedundantSpaces } from "../functions/functions";
+
 import Cell from "./Cell";
 
 function Board() {

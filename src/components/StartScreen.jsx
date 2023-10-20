@@ -1,6 +1,6 @@
 import { useGameContext } from "../context/GameContext";
 
-export default function StartScreen() {
+function StartScreen() {
     const { dispatch } = useGameContext();
 
     return (
@@ -13,3 +13,5 @@ export default function StartScreen() {
         </>
     );
 }
+
+export default StartScreen;

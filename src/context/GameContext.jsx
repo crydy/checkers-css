@@ -7,7 +7,7 @@ import {
     useContext,
 } from "react";
 
-import initState from "../data/initState";
+import { initState } from "../data/initState";
 import { useKeydown } from "../hooks/useKeydown";
 import { reducer } from "../functions/reducer";
 import {

@@ -1,5 +1,5 @@
-import testData from "../data/testGameStates";
-import initState from "../data/initState";
+import { testData } from "../data/testGameStates";
+import { initState } from "../data/initState";
 
 export function reducer(state, action) {
     const isNextWhite = state.history.length % 2 === 0 ? false : true;

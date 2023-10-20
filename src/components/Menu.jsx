@@ -1,6 +1,6 @@
 import { useGameContext } from "../context/GameContext";
-import testData from "../data/testGameStates";
 import { useKeydown } from "../hooks/useKeydown";
+import { testData } from "../data/testGameStates";
 
 function Menu() {
     const {
